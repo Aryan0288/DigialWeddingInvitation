@@ -1,23 +1,32 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:digital_wedding_invitation/main.dart';
+import 'package:digital_wedding_invitation/data/repositories/invitation_repository.dart';
 
 void main() {
-  testWidgets('Wedding invitation displays names and RSVP button', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const DigitalWeddingInvitationApp());
+  testWidgets('Landing page hero text and CTA button renders', (WidgetTester tester) async {
+    // Seed mock initial values for testing SharedPreferences
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
 
-    // Verify that the couple names are displayed.
-    expect(find.text('Aryan & Priya'), findsOneWidget);
+    // Pump app inside ProviderScope
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+        ],
+        child: const WeddingInvitationApp(),
+      ),
+    );
 
-    // Verify that the RSVP button is displayed.
-    expect(find.text('RSVP Now'), findsOneWidget);
+    // Wait for the widgets to render
+    await tester.pumpAndSettle();
+
+    // Verify that the Landing Page title elements are displayed.
+    expect(find.textContaining('Digital Wedding Invitation'), findsOneWidget);
+
+    // Verify that the CTA button is displayed.
+    expect(find.text('Create Invitation'), findsOneWidget);
   });
 }
