@@ -1,4 +1,4 @@
-# IMP
+# IMP Documentation
 
 # Project Context: Digital Wedding Invitation Builder (V5 - Local & Cloud Real-Time Sync)
 
