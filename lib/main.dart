@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'core/theme/app_theme.dart';
 import 'core/routes/routes.dart';
 import 'data/repositories/invitation_repository.dart';
 
@@ -40,28 +41,7 @@ class WeddingInvitationApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Digital Wedding Invitation Builder',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFD4AF37), // Luxury Gold
-          brightness: Brightness.dark,
-          primary: const Color(0xFFD4AF37),
-          surface: const Color(0xFF0F1626), // Royal Navy Black
-          background: const Color(0xFF070B19), // Midnight Dark
-        ),
-        scaffoldBackgroundColor: const Color(0xFF070B19),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF0F1626),
-          elevation: 0,
-        ),
-        // Premium default typography configuration
-        textTheme: const TextTheme(
-          displayLarge: TextStyle(fontFamily: 'Serif', fontSize: 32, fontWeight: FontWeight.w300, color: Colors.white),
-          headlineMedium: TextStyle(fontFamily: 'Serif', fontSize: 24, fontWeight: FontWeight.normal, color: Color(0xFFD4AF37)),
-          bodyLarge: TextStyle(fontSize: 14, color: Colors.white70, height: 1.5),
-        ),
-      ),
+      theme: AppTheme.theme,
       routerConfig: router,
     );
   }

@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:uuid/uuid.dart';
@@ -133,9 +132,23 @@ class BuilderViewModel extends StateNotifier<BuilderState> {
     _autoSaveDraft();
   }
 
+  void updateBrideImageUrl(String url) {
+    state = state.copyWith(
+      invitation: state.invitation.copyWith(brideImageUrl: url),
+    );
+    _autoSaveDraft();
+  }
+
   void updateGroomName(String name) {
     state = state.copyWith(
       invitation: state.invitation.copyWith(groomName: name),
+    );
+    _autoSaveDraft();
+  }
+
+  void updateGroomImageUrl(String url) {
+    state = state.copyWith(
+      invitation: state.invitation.copyWith(groomImageUrl: url),
     );
     _autoSaveDraft();
   }

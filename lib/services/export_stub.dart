@@ -8,4 +8,8 @@ abstract class ExportService {
 
   static void broadcastUpdate(String invitationId) {}
   static Stream<String> listenForUpdates() => const Stream.empty();
+  
+  static Future<String?> pickImage() async {
+    throw UnimplementedError('Platform not supported');
+  }
 }
