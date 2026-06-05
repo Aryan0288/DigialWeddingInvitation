@@ -174,3 +174,20 @@ class AppCaption extends AppText {
     super.preventTranslation,
   });
 }
+
+class AppLabel extends AppText {
+  const AppLabel(
+    super.text, {
+    super.key,
+    super.color,
+    super.fontSize = 11,
+    super.fontWeight = FontWeight.w600,
+    super.textAlign,
+    super.maxLines,
+    super.overflow,
+    super.isSerif = false,
+    super.letterSpacing = 1.0,
+    super.fontStyle,
+    super.preventTranslation,
+  });
+}

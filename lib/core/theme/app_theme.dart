@@ -37,6 +37,7 @@ class AppColors {
   static const Color mutedText = Color(0xFF6B7280);
   static const Color accentGold = Color(0xFFC8A96A);
   static const Color hoverGold = Color(0xFFB8955A);
+  static const Color accent = Color(0xFF2563EB); // Stripe blue accent
 }
 
 class AppDesign {
@@ -97,8 +98,8 @@ class AppTheme {
       brightness: Brightness.light,
       scaffoldBackgroundColor: AppColors.background,
       colorScheme: const ColorScheme.light(
-        primary: AppColors.accentGold,
-        secondary: AppColors.accentGold,
+        primary: AppColors.accent,
+        secondary: AppColors.accent,
         surface: AppColors.surface,
         background: AppColors.background,
         error: AppColors.error,
