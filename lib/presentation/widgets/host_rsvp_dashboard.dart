@@ -3,6 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../data/models/rsvp_model.dart';
 import '../../data/repositories/invitation_repository.dart';
+import '../widgets/common/app_text.dart';
+import '../widgets/common/app_card.dart';
+import '../widgets/common/app_empty_state.dart';
+import '../widgets/common/app_loading.dart';
+import '../../../core/theme/app_theme.dart';
 
 class HostRsvpDashboard extends ConsumerWidget {
   final String invitationId;
@@ -12,49 +17,40 @@ class HostRsvpDashboard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final rsvpsAsync = ref.watch(rsvpsStreamProvider(invitationId));
+    final isLight = Theme.of(context).brightness == Brightness.light;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        AppTitle(
           'Step 5: Host RSVP Dashboard',
-          style: TextStyle(
-            color: Color(0xFFD4AF37),
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            fontFamily: 'Serif',
-          ),
+          color: isLight ? AppColors.primaryText : Colors.white,
+          fontSize: 22,
+          fontWeight: FontWeight.w400,
         ),
         const SizedBox(height: 8),
-        const Text(
+        AppBody(
           'Track guest confirmations, headcounts, and meal preferences in real-time. This page listens directly to updates from your public link.',
-          style: TextStyle(color: Colors.white54, fontSize: 12),
+          color: isLight ? AppColors.secondaryText : Colors.white54,
+          fontSize: 12,
         ),
         const SizedBox(height: 24),
         
         rsvpsAsync.when(
           data: (rsvps) => _buildDashboardContent(context, rsvps),
-          loading: () => const Center(
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 40.0),
-              child: CircularProgressIndicator(color: Color(0xFFD4AF37)),
-            ),
-          ),
-          error: (err, stack) => Container(
+          loading: () => const AppLoading(message: 'Connecting to live RSVP feed...'),
+          error: (err, stack) => AppCard(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.red.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.red.withOpacity(0.3)),
-            ),
+            borderColor: AppColors.error.withOpacity(0.3),
             child: Row(
               children: [
-                const Icon(Icons.error_outline, color: Colors.red),
+                const Icon(Icons.error_outline, color: AppColors.error),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
+                  child: AppBody(
                     'Failed to load live RSVPs: $err',
-                    style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                    color: AppColors.error,
+                    fontSize: 13,
                   ),
                 ),
               ],
@@ -66,47 +62,12 @@ class HostRsvpDashboard extends ConsumerWidget {
   }
 
   Widget _buildDashboardContent(BuildContext context, List<RsvpModel> rsvps) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
     if (rsvps.isEmpty) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1E2638),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.04)),
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFFD4AF37).withOpacity(0.05),
-              ),
-              child: const Icon(
-                Icons.mark_email_unread_outlined,
-                color: Color(0xFFD4AF37),
-                size: 36,
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'No RSVPs Received Yet',
-              style: TextStyle(
-                fontFamily: 'Serif',
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Once you share the link in Step 4, guest submissions will appear here instantly!',
-              style: TextStyle(color: Colors.white54, fontSize: 12),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+      return const AppEmptyState(
+        icon: Icons.mark_email_unread_outlined,
+        title: 'No RSVPs Received Yet',
+        description: 'Once you share the link in Step 4, guest submissions will appear here instantly!',
       );
     }
 
@@ -144,11 +105,11 @@ class HostRsvpDashboard extends ConsumerWidget {
             if (isNarrow) {
               return Column(
                 children: [
-                  _buildMetricCard('Total Attending', totalHeadcount.toString(), Icons.people_rounded, const Color(0xFF2ECC71)),
+                  _buildMetricCard(context, 'Total Attending', totalHeadcount.toString(), Icons.people_rounded, AppColors.success),
                   const SizedBox(height: 12),
-                  _buildMetricCard('Declined RSVPs', declinedRsvps.toString(), Icons.person_off_rounded, Colors.redAccent),
+                  _buildMetricCard(context, 'Declined RSVPs', declinedRsvps.toString(), Icons.person_off_rounded, AppColors.error),
                   const SizedBox(height: 12),
-                  _buildMetricCard('Total Responses', totalRsvpCount.toString(), Icons.assignment_turned_in_rounded, const Color(0xFFD4AF37)),
+                  _buildMetricCard(context, 'Total Responses', totalRsvpCount.toString(), Icons.assignment_turned_in_rounded, isLight ? const Color(0xFF2563EB) : AppColors.navyAccent),
                 ],
               );
             }
@@ -158,15 +119,15 @@ class HostRsvpDashboard extends ConsumerWidget {
               children: [
                 SizedBox(
                   width: cardWidth,
-                  child: _buildMetricCard('Total Attending', totalHeadcount.toString(), Icons.people_rounded, const Color(0xFF2ECC71)),
+                  child: _buildMetricCard(context, 'Total Attending', totalHeadcount.toString(), Icons.people_rounded, AppColors.success),
                 ),
                 SizedBox(
                   width: cardWidth,
-                  child: _buildMetricCard('Declined RSVPs', declinedRsvps.toString(), Icons.person_off_rounded, Colors.redAccent),
+                  child: _buildMetricCard(context, 'Declined RSVPs', declinedRsvps.toString(), Icons.person_off_rounded, AppColors.error),
                 ),
                 SizedBox(
                   width: cardWidth,
-                  child: _buildMetricCard('Total Responses', totalRsvpCount.toString(), Icons.assignment_turned_in_rounded, const Color(0xFFD4AF37)),
+                  child: _buildMetricCard(context, 'Total Responses', totalRsvpCount.toString(), Icons.assignment_turned_in_rounded, isLight ? const Color(0xFF2563EB) : AppColors.navyAccent),
                 ),
               ],
             );
@@ -177,32 +138,24 @@ class HostRsvpDashboard extends ConsumerWidget {
 
         // Meal Preferences Breakdown Card
         if (totalHeadcount > 0) ...[
-          Container(
-            width: double.infinity,
+          AppCard(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E2638),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withOpacity(0.02)),
-            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                AppText(
                   'MEAL PREFERENCE DISTRIBUTION',
-                  style: TextStyle(
-                    color: Color(0xFFD4AF37),
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.5,
-                  ),
+                  color: isLight ? const Color(0xFF2563EB) : AppColors.navyAccent,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
                 ),
                 const SizedBox(height: 16),
-                _buildMealProgressRow('Standard / Regular', standardCount, totalHeadcount, Colors.amber),
+                _buildMealProgressRow('Standard / Regular', standardCount, totalHeadcount, Colors.amber, isLight),
                 const SizedBox(height: 12),
-                _buildMealProgressRow('Vegetarian', vegCount, totalHeadcount, Colors.green),
+                _buildMealProgressRow('Vegetarian', vegCount, totalHeadcount, Colors.green, isLight),
                 const SizedBox(height: 12),
-                _buildMealProgressRow('Vegan', veganCount, totalHeadcount, Colors.teal),
+                _buildMealProgressRow('Vegan', veganCount, totalHeadcount, Colors.teal, isLight),
               ],
             ),
           ),
@@ -210,36 +163,28 @@ class HostRsvpDashboard extends ConsumerWidget {
         ],
 
         // Guest List Datatable
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: const Color(0xFF1E2638),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.02)),
-          ),
-          clipBehavior: Clip.antiAlias,
+        AppCard(
+          padding: EdgeInsets.zero,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Padding(
-                padding: EdgeInsets.fromLTRB(20, 20, 20, 12),
-                child: Text(
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                child: AppText(
                   'RECENT GUEST CONFIRMATIONS',
-                  style: TextStyle(
-                    color: Color(0xFFD4AF37),
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.5,
-                  ),
+                  color: isLight ? const Color(0xFF2563EB) : AppColors.navyAccent,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
                 ),
               ),
-              const Divider(color: Colors.white10, height: 1),
+              Divider(color: isLight ? AppColors.border : Colors.white10, height: 1),
               
               ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: rsvps.length,
-                separatorBuilder: (context, idx) => const Divider(color: Colors.white10, height: 1),
+                separatorBuilder: (context, idx) => Divider(color: isLight ? AppColors.border : Colors.white10, height: 1),
                 itemBuilder: (context, index) {
                   final r = rsvps[index];
                   final timeStr = DateFormat('MMM d, h:mm a').format(r.timestamp);
@@ -251,38 +196,34 @@ class HostRsvpDashboard extends ConsumerWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: r.isAttending 
-                            ? const Color(0xFF2ECC71).withOpacity(0.1) 
-                            : Colors.redAccent.withOpacity(0.1),
+                            ? AppColors.success.withOpacity(0.1) 
+                            : AppColors.error.withOpacity(0.1),
                       ),
                       child: Icon(
                         r.isAttending ? Icons.check_circle_outline : Icons.highlight_off,
-                        color: r.isAttending ? const Color(0xFF2ECC71) : Colors.redAccent,
+                        color: r.isAttending ? AppColors.success : AppColors.error,
                         size: 20,
                       ),
                     ),
-                    title: Text(
+                    title: AppText(
                       r.guestName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
+                      color: isLight ? AppColors.primaryText : Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
-                    subtitle: Text(
+                    subtitle: AppBody(
                       r.isAttending 
                           ? '${r.guestsCount} Guest${r.guestsCount > 1 ? "s" : ""} • ${r.mealPreference}'
                           : 'Declined Invitation',
-                      style: TextStyle(
-                        color: r.isAttending ? Colors.white70 : Colors.white30,
-                        fontSize: 12,
-                      ),
+                      color: r.isAttending 
+                          ? (isLight ? AppColors.secondaryText : Colors.white70) 
+                          : (isLight ? AppColors.secondaryText.withOpacity(0.5) : Colors.white30),
+                      fontSize: 12,
                     ),
-                    trailing: Text(
+                    trailing: AppBody(
                       timeStr,
-                      style: const TextStyle(
-                        color: Colors.white38,
-                        fontSize: 11,
-                      ),
+                      color: isLight ? AppColors.secondaryText.withOpacity(0.6) : Colors.white38,
+                      fontSize: 11,
                     ),
                   );
                 },
@@ -294,14 +235,10 @@ class HostRsvpDashboard extends ConsumerWidget {
     );
   }
 
-  Widget _buildMetricCard(String label, String value, IconData icon, Color accentColor) {
-    return Container(
+  Widget _buildMetricCard(BuildContext context, String label, String value, IconData icon, Color accentColor) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    return AppCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E2638),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.02)),
-      ),
       child: Row(
         children: [
           Container(
@@ -317,21 +254,17 @@ class HostRsvpDashboard extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                AppText(
                   value,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
+                  color: isLight ? AppColors.primaryText : Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
                 ),
                 const SizedBox(height: 2),
-                Text(
+                AppBody(
                   label,
-                  style: const TextStyle(
-                    color: Colors.white38,
-                    fontSize: 11,
-                  ),
+                  color: isLight ? AppColors.secondaryText : Colors.white38,
+                  fontSize: 11,
                 ),
               ],
             ),
@@ -341,7 +274,7 @@ class HostRsvpDashboard extends ConsumerWidget {
     );
   }
 
-  Widget _buildMealProgressRow(String label, int count, int total, Color color) {
+  Widget _buildMealProgressRow(String label, int count, int total, Color color, bool isLight) {
     final double pct = total > 0 ? (count / total) : 0.0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -349,10 +282,12 @@ class HostRsvpDashboard extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-            Text(
+            AppBody(label, color: isLight ? AppColors.secondaryText : Colors.white70, fontSize: 12),
+            AppText(
               '$count (${(pct * 100).toStringAsFixed(0)}%)',
-              style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold),
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
             ),
           ],
         ),
@@ -362,7 +297,7 @@ class HostRsvpDashboard extends ConsumerWidget {
           child: LinearProgressIndicator(
             value: pct,
             minHeight: 6,
-            backgroundColor: Colors.white.withOpacity(0.04),
+            backgroundColor: isLight ? const Color(0xFFE5E7EB) : Colors.white.withOpacity(0.04),
             color: color,
           ),
         ),

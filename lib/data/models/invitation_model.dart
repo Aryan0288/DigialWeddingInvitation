@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class InvitationModel {
   final String id;
   final String brideName;
@@ -10,6 +8,8 @@ class InvitationModel {
   final String venueAddress;
   final String personalMessage;
   final int selectedTemplateId;
+  final String brideImageUrl;
+  final String groomImageUrl;
 
   InvitationModel({
     required this.id,
@@ -21,6 +21,8 @@ class InvitationModel {
     required this.venueAddress,
     required this.personalMessage,
     required this.selectedTemplateId,
+    this.brideImageUrl = '',
+    this.groomImageUrl = '',
   });
 
   // Empty placeholder instance for initial states
@@ -35,6 +37,8 @@ class InvitationModel {
       venueAddress: '',
       personalMessage: '',
       selectedTemplateId: 1,
+      brideImageUrl: '',
+      groomImageUrl: '',
     );
   }
 
@@ -49,6 +53,8 @@ class InvitationModel {
       'venueAddress': venueAddress,
       'personalMessage': personalMessage,
       'selectedTemplateId': selectedTemplateId,
+      'brideImageUrl': brideImageUrl,
+      'groomImageUrl': groomImageUrl,
     };
   }
 
@@ -65,6 +71,8 @@ class InvitationModel {
       venueAddress: json['venueAddress'] ?? '',
       personalMessage: json['personalMessage'] ?? '',
       selectedTemplateId: json['selectedTemplateId'] ?? 1,
+      brideImageUrl: json['brideImageUrl'] ?? '',
+      groomImageUrl: json['groomImageUrl'] ?? '',
     );
   }
 
@@ -78,6 +86,8 @@ class InvitationModel {
     String? venueAddress,
     String? personalMessage,
     int? selectedTemplateId,
+    String? brideImageUrl,
+    String? groomImageUrl,
   }) {
     return InvitationModel(
       id: id ?? this.id,
@@ -89,6 +99,8 @@ class InvitationModel {
       venueAddress: venueAddress ?? this.venueAddress,
       personalMessage: personalMessage ?? this.personalMessage,
       selectedTemplateId: selectedTemplateId ?? this.selectedTemplateId,
+      brideImageUrl: brideImageUrl ?? this.brideImageUrl,
+      groomImageUrl: groomImageUrl ?? this.groomImageUrl,
     );
   }
 }
