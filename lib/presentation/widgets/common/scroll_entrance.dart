@@ -9,6 +9,7 @@ class ScrollEntrance extends StatefulWidget {
   final ScrollEntranceType type;
   final int delayIndex;
   final Duration duration;
+  final bool triggerOnScroll;
 
   const ScrollEntrance({
     super.key,
@@ -16,21 +17,20 @@ class ScrollEntrance extends StatefulWidget {
     this.type = ScrollEntranceType.fadeIn,
     this.delayIndex = 0,
     this.duration = AppDesign.durationMedium,
+    this.triggerOnScroll = true,
   });
 
   @override
   State<ScrollEntrance> createState() => _ScrollEntranceState();
 }
 
-class _ScrollEntranceState extends State<ScrollEntrance> with SingleTickerProviderStateMixin {
+class _ScrollEntranceState extends State<ScrollEntrance> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late AnimationController _controller;
   late Animation<double> _opacity;
   late Animation<Offset> _offset;
   late Animation<double> _scale;
-
-  ScrollableState? _scrollableState;
-  bool _isAnimationTriggered = false;
   Timer? _delayTimer;
+  bool _isAnimationTriggered = false;
 
   @override
   void initState() {
@@ -46,7 +46,7 @@ class _ScrollEntranceState extends State<ScrollEntrance> with SingleTickerProvid
 
     _offset = Tween<Offset>(
       begin: (widget.type == ScrollEntranceType.slideUp || widget.type == ScrollEntranceType.slideAndScale) 
-          ? const Offset(0.0, 0.12) 
+          ? const Offset(0.0, 0.05) 
           : Offset.zero,
       end: Offset.zero,
     ).animate(
@@ -61,93 +61,20 @@ class _ScrollEntranceState extends State<ScrollEntrance> with SingleTickerProvid
     ).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
     );
+
+    _triggerAnimation();
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _setupScrollListener();
-  }
-
-  void _setupScrollListener() {
-    _removeScrollListener();
-    _scrollableState = Scrollable.maybeOf(context);
-    if (_scrollableState != null) {
-      _scrollableState!.position.addListener(_checkVisibility);
-      // Trigger a check immediately after build
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _checkVisibility();
-      });
-    } else {
-      // If there's no scrollable ancestor, trigger immediately
-      _triggerAnimation();
-    }
-  }
-
-  void _removeScrollListener() {
-    if (_scrollableState != null) {
-      try {
-        _scrollableState!.position.removeListener(_checkVisibility);
-      } catch (_) {
-        // Scroll position might be disposed
-      }
-      _scrollableState = null;
-    }
-  }
-
-  int _lastCheckTime = 0;
-  bool _hasDeferredCheck = false;
-
-  void _checkVisibility() {
-    if (_isAnimationTriggered) return;
-    if (!mounted) return;
-
-    final now = DateTime.now().millisecondsSinceEpoch;
-    if (now - _lastCheckTime < 50) {
-      _scheduleDeferredCheck();
-      return;
-    }
-    _lastCheckTime = now;
-    _performCheck();
-  }
-
-  void _scheduleDeferredCheck() {
-    if (_hasDeferredCheck) return;
-    _hasDeferredCheck = true;
-    Future.delayed(const Duration(milliseconds: 50), () {
-      _hasDeferredCheck = false;
-      if (mounted && !_isAnimationTriggered) {
-        _performCheck();
-      }
-    });
-  }
-
-  void _performCheck() {
-    final renderObject = context.findRenderObject();
-    if (renderObject is! RenderBox) return;
-    if (!renderObject.hasSize) return;
-
-    try {
-      final position = renderObject.localToGlobal(Offset.zero);
-      final size = renderObject.size;
-      final double screenHeight = MediaQuery.of(context).size.height;
-
-      // Trigger animation when the widget enters the viewport (partially visible)
-      if (position.dy < screenHeight - 20 && position.dy + size.height > 20) {
-        _triggerAnimation();
-      }
-    } catch (_) {
-      // Catch layout changes during fast scroll teardowns
-    }
-  }
+  bool get wantKeepAlive => _isAnimationTriggered;
 
   void _triggerAnimation() {
     if (_isAnimationTriggered) return;
     _isAnimationTriggered = true;
-    _removeScrollListener();
+    updateKeepAlive();
 
     _delayTimer = Timer(
-      Duration(milliseconds: widget.delayIndex * 60),
+      Duration(milliseconds: widget.delayIndex * 30),
       () {
         if (mounted) {
           _controller.forward();
@@ -158,7 +85,6 @@ class _ScrollEntranceState extends State<ScrollEntrance> with SingleTickerProvid
 
   @override
   void dispose() {
-    _removeScrollListener();
     _delayTimer?.cancel();
     _controller.dispose();
     super.dispose();
@@ -166,15 +92,27 @@ class _ScrollEntranceState extends State<ScrollEntrance> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+    
+    Widget result = widget.child;
+    
+    if (widget.type == ScrollEntranceType.scaleIn || widget.type == ScrollEntranceType.slideAndScale) {
+      result = ScaleTransition(
+        scale: _scale,
+        child: result,
+      );
+    }
+    
+    if (widget.type == ScrollEntranceType.slideUp || widget.type == ScrollEntranceType.slideAndScale) {
+      result = SlideTransition(
+        position: _offset,
+        child: result,
+      );
+    }
+    
     return FadeTransition(
       opacity: _opacity,
-      child: SlideTransition(
-        position: _offset,
-        child: ScaleTransition(
-          scale: _scale,
-          child: widget.child,
-        ),
-      ),
+      child: result,
     );
   }
 }
