@@ -73,7 +73,6 @@ void main() {
       findsOneWidget,
     );
 
-    // Verify that the CTA button is displayed.
-    expect(find.text('Create Free Card'), findsOneWidget);
+    expect(find.text('CREATE FREE CARD'), findsOneWidget);
   });
 }

@@ -94,47 +94,14 @@ class _InvitationBuilderViewState extends ConsumerState<InvitationBuilderView> w
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(builderViewModelProvider);
+    final currentStep = ref.watch(builderViewModelProvider.select((s) => s.currentStep));
+    final invitationId = ref.watch(builderViewModelProvider.select((s) => s.invitation.id));
     final size = MediaQuery.of(context).size;
     final isDesktop = size.width >= 900;
     final isLight = Theme.of(context).brightness == Brightness.light;
 
-    final Widget previewCard = Center(
-      child: AspectRatio(
-        aspectRatio: 9 / 16,
-        child: Container(
-          decoration: BoxDecoration(
-            color: isLight ? Colors.white : const Color(0xFF1E2638),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: isLight ? Colors.black.withOpacity(0.08) : Colors.black.withOpacity(0.5),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: RepaintBoundary(
-            child: Screenshot(
-              controller: _screenshotController,
-              child: FittedBox(
-                fit: BoxFit.contain,
-                child: SizedBox(
-                  width: 360,
-                  height: 640,
-                  child: InvitationTemplateFactory.getTemplate(
-                    templateId: state.invitation.selectedTemplateId,
-                    invitation: state.invitation,
-                    isPreview: true,
-                    availableTemplates: state.availableTemplates,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
+    final Widget previewCard = _LivePreviewPanel(
+      screenshotController: _screenshotController,
     );
 
     if (isDesktop) {
@@ -152,15 +119,15 @@ class _InvitationBuilderViewState extends ConsumerState<InvitationBuilderView> w
                 padding: const EdgeInsets.all(32.0),
                 child: Column(
                   children: [
-                    WorkspaceStepper(currentStep: state.currentStep),
+                    WorkspaceStepper(currentStep: currentStep),
                     const SizedBox(height: 32),
                     Expanded(
                       child: SingleChildScrollView(
-                        child: _buildActiveFormStep(state),
+                        child: _buildActiveFormStep(currentStep, invitationId),
                       ),
                     ),
                     const SizedBox(height: 24),
-                    _buildNavigationButtons(state),
+                    _buildNavigationButtons(currentStep),
                   ],
                 ),
               ),
@@ -170,21 +137,7 @@ class _InvitationBuilderViewState extends ConsumerState<InvitationBuilderView> w
             Expanded(
               flex: 5,
               child: Container(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment.center,
-                    radius: 0.9,
-                    colors: isLight
-                        ? [
-                            const Color(0xFFFDFBF7),
-                            AppColors.background,
-                          ]
-                        : [
-                            const Color(0xFF141D32),
-                            AppColors.background,
-                          ],
-                  ),
-                ),
+                color: isLight ? const Color(0xFFFCFAF7) : const Color(0xFF23201D),
                 padding: const EdgeInsets.all(40.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -192,12 +145,12 @@ class _InvitationBuilderViewState extends ConsumerState<InvitationBuilderView> w
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: const [
-                        Icon(Icons.video_settings, color: AppColors.accent, size: 14),
+                        Icon(Icons.brush_outlined, color: AppColors.accent, size: 14),
                         SizedBox(width: 8),
                         AppText(
-                          'STUDIO PREVIEW PORT',
+                          'LIVE INVITATION PREVIEW',
                           color: AppColors.accent,
-                          fontSize: 9,
+                          fontSize: 10,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 2.0,
                         ),
@@ -264,15 +217,15 @@ class _InvitationBuilderViewState extends ConsumerState<InvitationBuilderView> w
             padding: const EdgeInsets.all(20.0),
             child: Column(
               children: [
-                WorkspaceStepper(currentStep: state.currentStep),
+                WorkspaceStepper(currentStep: currentStep),
                 const SizedBox(height: 24),
                 Expanded(
                   child: SingleChildScrollView(
-                    child: _buildActiveFormStep(state),
+                    child: _buildActiveFormStep(currentStep, invitationId),
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildNavigationButtons(state),
+                _buildNavigationButtons(currentStep),
               ],
             ),
           ),
@@ -297,8 +250,8 @@ class _InvitationBuilderViewState extends ConsumerState<InvitationBuilderView> w
     );
   }
 
-  Widget _buildActiveFormStep(BuilderState state) {
-    switch (state.currentStep) {
+  Widget _buildActiveFormStep(int currentStep, String invitationId) {
+    switch (currentStep) {
       case 0:
         return const TemplateSelectorSection();
       case 1:
@@ -319,16 +272,15 @@ class _InvitationBuilderViewState extends ConsumerState<InvitationBuilderView> w
           screenshotController: _screenshotController,
         );
       case 4:
-        return HostRsvpDashboard(invitationId: state.invitation.id);
+        return HostRsvpDashboard(invitationId: invitationId);
       default:
         return const TemplateSelectorSection();
     }
   }
 
-  Widget _buildNavigationButtons(BuilderState state) {
-    final showBack = state.currentStep > 0;
-    final isLast = state.currentStep == 4;
-    final isLight = Theme.of(context).brightness == Brightness.light;
+  Widget _buildNavigationButtons(int currentStep) {
+    final showBack = currentStep > 0;
+    final isLast = currentStep == 4;
 
     return Row(
       children: [
@@ -337,8 +289,6 @@ class _InvitationBuilderViewState extends ConsumerState<InvitationBuilderView> w
             child: AppButton(
               label: 'Back',
               type: AppButtonType.outlined,
-              backgroundColor: isLight ? AppColors.accent : AppColors.navyAccent,
-              foregroundColor: isLight ? AppColors.accent : AppColors.navyAccent,
               onPressed: () {
                 ref.read(builderViewModelProvider.notifier).previousStep();
               },
@@ -350,13 +300,11 @@ class _InvitationBuilderViewState extends ConsumerState<InvitationBuilderView> w
           Expanded(
             child: AppButton(
               label: 'Next',
-              backgroundColor: isLight ? AppColors.accent : AppColors.navyAccent,
-              foregroundColor: isLight ? Colors.white : Colors.black87,
               onPressed: () {
-                if (state.currentStep == 1 && !_formKeyStep2.currentState!.validate()) {
+                if (currentStep == 1 && !_formKeyStep2.currentState!.validate()) {
                   return;
                 }
-                if (state.currentStep == 2 && !_formKeyStep3.currentState!.validate()) {
+                if (currentStep == 2 && !_formKeyStep3.currentState!.validate()) {
                   return;
                 }
                 ref.read(builderViewModelProvider.notifier).nextStep();
@@ -366,6 +314,55 @@ class _InvitationBuilderViewState extends ConsumerState<InvitationBuilderView> w
         else
           const Expanded(child: SizedBox.shrink()),
       ],
+    );
+  }
+}
+
+class _LivePreviewPanel extends ConsumerWidget {
+  final ScreenshotController screenshotController;
+  const _LivePreviewPanel({required this.screenshotController});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(builderViewModelProvider);
+    final isLight = Theme.of(context).brightness == Brightness.light;
+
+    return Center(
+      child: AspectRatio(
+        aspectRatio: 9 / 16,
+        child: Container(
+          decoration: BoxDecoration(
+            color: isLight ? Colors.white : const Color(0xFF1E2638),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: isLight ? const Color(0x1A2D2A26) : Colors.black.withOpacity(0.5),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: RepaintBoundary(
+            child: Screenshot(
+              controller: screenshotController,
+              child: FittedBox(
+                fit: BoxFit.contain,
+                child: SizedBox(
+                  width: 360,
+                  height: 640,
+                  child: InvitationTemplateFactory.getTemplate(
+                    templateId: state.invitation.selectedTemplateId,
+                    invitation: state.invitation,
+                    isPreview: true,
+                    availableTemplates: state.availableTemplates,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

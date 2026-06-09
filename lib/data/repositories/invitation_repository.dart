@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/invitation_model.dart';
 import '../models/rsvp_model.dart';
 import '../models/remote_template_model.dart';
+import 'template_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/export_service.dart' as platform_export;
 import 'dart:convert';
@@ -36,6 +37,7 @@ class DualStorageInvitationRepository implements IInvitationRepository {
   
   bool _isFirebaseInitialized = false;
   FirebaseFirestore? _firestore;
+  List<RemoteTemplateModel>? _cachedTemplates;
 
   DualStorageInvitationRepository(
     this._draftsBox,
@@ -214,205 +216,11 @@ class DualStorageInvitationRepository implements IInvitationRepository {
   // -------------------------------------------------------------
   @override
   Future<List<RemoteTemplateModel>> fetchRemoteTemplates() async {
-    // Simulates an API/Server JSON request, adding a full catalog of 15 premium templates
-    final List<Map<String, dynamic>> rawList = [
-      {
-        'id': 1,
-        'title': 'Classic Mandala (Gold & Red)',
-        'description': 'Rich dark royal red with golden concentric patterns and luxury Sanskrit headers.',
-        'primaryColorHex': '#5B0000',
-        'secondaryColorHex': '#D4AF37',
-        'bgGradientHex': ['#5B0000', '#3B0000'],
-        'bgPatternUrl': 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2000',
-        'dividerIconUrl': 'https://cdn-icons-png.flaticon.com/512/3106/3106807.png',
-        'borderFrameUrl': 'https://cdn-icons-png.flaticon.com/512/10700/10700940.png',
-        'fontTitle': 'Cinzel',
-        'fontBody': 'Montserrat',
-      },
-      {
-        'id': 2,
-        'title': 'Royal Peacock (Maroon & Teal)',
-        'description': 'Elegant deep maroon backdrop complemented by teal peacock elements and gold frames.',
-        'primaryColorHex': '#380208',
-        'secondaryColorHex': '#D4AF37',
-        'bgGradientHex': ['#380208', '#180004'],
-        'bgPatternUrl': 'https://images.unsplash.com/photo-1604871000636-074fa5117945?q=80&w=2000',
-        'dividerIconUrl': 'https://cdn-icons-png.flaticon.com/512/3233/3233514.png',
-        'borderFrameUrl': 'https://cdn-icons-png.flaticon.com/512/9950/9950587.png',
-        'fontTitle': 'Playfair Display',
-        'fontBody': 'Montserrat',
-      },
-      {
-        'id': 3,
-        'title': 'Rose Gold (Minimalist Floral)',
-        'description': 'Beautiful blush rose gold shimmers bordered with detailed thin floral leafy branches.',
-        'primaryColorHex': '#B76E79',
-        'secondaryColorHex': '#4A3437',
-        'bgGradientHex': ['#FFF0F2', '#EAD1D5'],
-        'bgPatternUrl': 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?q=80&w=2000',
-        'dividerIconUrl': 'https://cdn-icons-png.flaticon.com/512/620/620757.png',
-        'borderFrameUrl': 'https://cdn-icons-png.flaticon.com/512/5904/5904123.png',
-        'fontTitle': 'Alex Brush',
-        'fontBody': 'Montserrat',
-      },
-      {
-        'id': 4,
-        'title': 'Maharaja Jaipur Palace (Emerald & Gold)',
-        'description': 'Royal Jaipur emerald green coupled with imperial gold mandalas and palace borders.',
-        'primaryColorHex': '#004B49',
-        'secondaryColorHex': '#F1C40F',
-        'bgGradientHex': ['#003332', '#004B49', '#001A19'],
-        'bgPatternUrl': 'https://images.unsplash.com/photo-1621510456681-23a23cfb5f57?q=80&w=2000',
-        'dividerIconUrl': 'https://cdn-icons-png.flaticon.com/512/2913/2913604.png',
-        'borderFrameUrl': 'https://cdn-icons-png.flaticon.com/512/10700/10700940.png',
-        'fontTitle': 'Cinzel',
-        'fontBody': 'Montserrat',
-      },
-      {
-        'id': 5,
-        'title': 'Rajputana Crimson & Gold',
-        'description': 'Royal Crimson with gold arched borders, reflecting traditional Rajput heritage.',
-        'primaryColorHex': '#7A0010',
-        'secondaryColorHex': '#E0B034',
-        'bgGradientHex': ['#7A0010', '#4A000A'],
-        'bgPatternUrl': 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2000',
-        'dividerIconUrl': 'https://cdn-icons-png.flaticon.com/512/3106/3106807.png',
-        'borderFrameUrl': 'https://cdn-icons-png.flaticon.com/512/9950/9950587.png',
-        'fontTitle': 'Playfair Display',
-        'fontBody': 'Montserrat',
-      },
-      {
-        'id': 6,
-        'title': 'Mughal Heritage (Indigo & Gold)',
-        'description': 'Royal Indigo backdrop paired with imperial gold archways and floral centerpieces.',
-        'primaryColorHex': '#2E1A47',
-        'secondaryColorHex': '#E6C229',
-        'bgGradientHex': ['#2E1A47', '#1A0D2E'],
-        'bgPatternUrl': 'https://images.unsplash.com/photo-1604871000636-074fa5117945?q=80&w=2000',
-        'dividerIconUrl': 'https://cdn-icons-png.flaticon.com/512/3233/3233514.png',
-        'borderFrameUrl': 'https://cdn-icons-png.flaticon.com/512/10700/10700940.png',
-        'fontTitle': 'Cinzel',
-        'fontBody': 'Montserrat',
-      },
-      {
-        'id': 7,
-        'title': 'Ivory Gold (Luxury)',
-        'description': 'Elegant ivory backdrop contrasted with rich charcoal typography and a clean gold frame.',
-        'primaryColorHex': '#F8F5F0',
-        'secondaryColorHex': '#1F1F1F',
-        'bgGradientHex': ['#F8F5F0', '#F2EFE9'],
-        'bgPatternUrl': 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?q=80&w=2000',
-        'dividerIconUrl': 'https://cdn-icons-png.flaticon.com/512/620/620757.png',
-        'borderFrameUrl': 'https://cdn-icons-png.flaticon.com/512/5904/5904123.png',
-        'fontTitle': 'Playfair Display',
-        'fontBody': 'Outfit',
-      },
-      {
-        'id': 8,
-        'title': 'Champagne Luxury',
-        'description': 'Luxurious warm champagne tones paired with classic serif typography and gold dividers.',
-        'primaryColorHex': '#F7E7CE',
-        'secondaryColorHex': '#2B2B2B',
-        'bgGradientHex': ['#F7E7CE', '#ECD4B4'],
-        'bgPatternUrl': 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?q=80&w=2000',
-        'dividerIconUrl': 'https://cdn-icons-png.flaticon.com/512/2913/2913604.png',
-        'borderFrameUrl': 'https://cdn-icons-png.flaticon.com/512/5904/5904123.png',
-        'fontTitle': 'Playfair Display',
-        'fontBody': 'Montserrat',
-      },
-      {
-        'id': 9,
-        'title': 'Midnight Navy & Gold',
-        'description': 'Stunning dark navy sky gradient decorated with glowing star mandalas and golden borders.',
-        'primaryColorHex': '#0D1B2A',
-        'secondaryColorHex': '#D4AF37',
-        'bgGradientHex': ['#0D1B2A', '#08111D'],
-        'bgPatternUrl': 'https://images.unsplash.com/photo-1621510456681-23a23cfb5f57?q=80&w=2000',
-        'dividerIconUrl': 'https://cdn-icons-png.flaticon.com/512/2913/2913604.png',
-        'borderFrameUrl': 'https://cdn-icons-png.flaticon.com/512/10700/10700940.png',
-        'fontTitle': 'Cinzel',
-        'fontBody': 'Montserrat',
-      },
-      {
-        'id': 10,
-        'title': 'Rose Garden (Floral)',
-        'description': 'Romance-inspired blush pink background adorned with intricate watercolor floral illustrations.',
-        'primaryColorHex': '#FFF5F5',
-        'secondaryColorHex': '#6B4F4F',
-        'bgGradientHex': ['#FFF5F5', '#FFEBEB'],
-        'bgPatternUrl': 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?q=80&w=2000',
-        'dividerIconUrl': 'https://cdn-icons-png.flaticon.com/512/620/620757.png',
-        'borderFrameUrl': 'https://cdn-icons-png.flaticon.com/512/5904/5904123.png',
-        'fontTitle': 'Alex Brush',
-        'fontBody': 'Montserrat',
-      },
-      {
-        'id': 11,
-        'title': 'Lavender Bloom',
-        'description': 'Delicate pastel lavender theme framed by hand-painted lavender branches and silver lines.',
-        'primaryColorHex': '#ECEBF7',
-        'secondaryColorHex': '#3D2C5E',
-        'bgGradientHex': ['#ECEBF7', '#D9D7ED'],
-        'bgPatternUrl': 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?q=80&w=2000',
-        'dividerIconUrl': 'https://cdn-icons-png.flaticon.com/512/620/620757.png',
-        'borderFrameUrl': 'https://cdn-icons-png.flaticon.com/512/5904/5904123.png',
-        'fontTitle': 'Playfair Display',
-        'fontBody': 'Montserrat',
-      },
-      {
-        'id': 12,
-        'title': 'White Magnolia',
-        'description': 'Fine-art cream backdrop featuring minimalist white magnolia blooms and thin border accents.',
-        'primaryColorHex': '#FAFAF8',
-        'secondaryColorHex': '#3A3A3A',
-        'bgGradientHex': ['#FAFAF8', '#F3F3EF'],
-        'bgPatternUrl': 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?q=80&w=2000',
-        'dividerIconUrl': 'https://cdn-icons-png.flaticon.com/512/620/620757.png',
-        'borderFrameUrl': 'https://cdn-icons-png.flaticon.com/512/5904/5904123.png',
-        'fontTitle': 'Alex Brush',
-        'fontBody': 'Montserrat',
-      },
-      {
-        'id': 13,
-        'title': 'Minimal Gold',
-        'description': 'Ultra-clean modern off-white invitation utilizing simple line art frames and refined typography.',
-        'primaryColorHex': '#FAF9F6',
-        'secondaryColorHex': '#C5A059',
-        'bgGradientHex': ['#FAF9F6', '#F2F1E8'],
-        'bgPatternUrl': 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?q=80&w=2000',
-        'dividerIconUrl': 'https://cdn-icons-png.flaticon.com/512/2913/2913604.png',
-        'borderFrameUrl': 'https://cdn-icons-png.flaticon.com/512/5904/5904123.png',
-        'fontTitle': 'Cinzel',
-        'fontBody': 'Montserrat',
-      },
-      {
-        'id': 14,
-        'title': 'Elegant Serif (Modern)',
-        'description': 'High-contrast editorial serif layout with no frames, letting elegant typography speak for itself.',
-        'primaryColorHex': '#EFEFEE',
-        'secondaryColorHex': '#2C3E50',
-        'bgGradientHex': ['#EFEFEE', '#DFDFDE'],
-        'bgPatternUrl': 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?q=80&w=2000',
-        'dividerIconUrl': 'https://cdn-icons-png.flaticon.com/512/2913/2913604.png',
-        'borderFrameUrl': 'https://cdn-icons-png.flaticon.com/512/5904/5904123.png',
-        'fontTitle': 'Playfair Display',
-        'fontBody': 'Montserrat',
-      },
-      {
-        'id': 15,
-        'title': 'Luxury Black & Gold',
-        'description': 'Stunning dark theme featuring a matte black backdrop with geometric golden borders.',
-        'primaryColorHex': '#121212',
-        'secondaryColorHex': '#D4AF37',
-        'bgGradientHex': ['#121212', '#1C1C1C'],
-        'bgPatternUrl': 'https://images.unsplash.com/photo-1621510456681-23a23cfb5f57?q=80&w=2000',
-        'dividerIconUrl': 'https://cdn-icons-png.flaticon.com/512/2913/2913604.png',
-        'borderFrameUrl': 'https://cdn-icons-png.flaticon.com/512/10700/10700940.png',
-        'fontTitle': 'Cinzel',
-        'fontBody': 'Montserrat',
-      }
-    ];
-    return rawList.map((json) => RemoteTemplateModel.fromJson(json)).toList();
+    if (_cachedTemplates != null) {
+      return _cachedTemplates!;
+    }
+    _cachedTemplates = rawTemplatesData.map((json) => RemoteTemplateModel.fromJson(json)).toList();
+    return _cachedTemplates!;
   }
 }
 

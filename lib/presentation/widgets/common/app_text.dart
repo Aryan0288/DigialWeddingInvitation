@@ -3,6 +3,12 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_theme.dart';
 
 class AppText extends StatelessWidget {
+  // Pre-cached base TextStyle objects — avoids GoogleFonts factory calls on every build()
+  static final TextStyle _serifBase = GoogleFonts.cormorantGaramond();
+  static final TextStyle _hindiBase = GoogleFonts.poppins();
+  static final TextStyle _sansBase = GoogleFonts.outfit();
+  static final RegExp _hindiRegex = RegExp(r'[\u0900-\u097F]');
+
   final String text;
   final Color? color;
   final double? fontSize;
@@ -66,18 +72,24 @@ class AppText extends StatelessWidget {
       resolvedColor = isLight ? AppColors.primaryText : Colors.white;
     }
 
-    // Standardizes typography configuration: Cormorant Garamond for Serifs, Inter for Sans-Serifs
-    TextStyle baseStyle = isSerif
-        ? GoogleFonts.playfairDisplay(textStyle: TextStyle(color: resolvedColor))
-        : GoogleFonts.inter(textStyle: TextStyle(color: resolvedColor));
+    // Use pre-cached base styles — zero GoogleFonts factory overhead during scroll
+    final TextStyle baseStyle;
+    if (isSerif) {
+      baseStyle = _serifBase;
+    } else if (_hindiRegex.hasMatch(text)) {
+      baseStyle = _hindiBase;
+    } else {
+      baseStyle = _sansBase;
+    }
         
-    final finalStyle = baseStyle.merge(style).copyWith(
+    final finalStyle = baseStyle.copyWith(
+      color: resolvedColor,
       fontSize: fontSize,
       fontWeight: fontWeight,
       fontStyle: fontStyle,
       height: height,
       letterSpacing: letterSpacing,
-    );
+    ).merge(style);
 
     return Text(
       text,

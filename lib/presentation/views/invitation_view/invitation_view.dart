@@ -56,6 +56,10 @@ class _InvitationDetailViewState extends ConsumerState<InvitationDetailView> wit
     );
   }
 
+  // Precomputed constant style values
+  static const Color _lightShadow = Color(0x14000000); // 8% opacity Black
+  static const Color _darkShadow = Color(0x80000000);  // 50% opacity Black
+
   @override
   Widget build(BuildContext context) {
     final detailState = ref.watch(invitationViewModelProvider(widget.invitationId));
@@ -126,7 +130,7 @@ class _InvitationDetailViewState extends ConsumerState<InvitationDetailView> wit
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: isLight ? Colors.black.withOpacity(0.08) : Colors.black.withOpacity(0.5),
+              color: isLight ? _lightShadow : _darkShadow,
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -192,7 +196,7 @@ class _InvitationDetailViewState extends ConsumerState<InvitationDetailView> wit
 
                     Container(
                       constraints: const BoxConstraints(maxWidth: 450),
-                      child: _buildCountdownCard(detailState.timeLeft),
+                      child: CountdownCardWidget(timeLeft: detailState.timeLeft),
                     ),
 
                     const SizedBox(height: 32),
@@ -220,8 +224,18 @@ class _InvitationDetailViewState extends ConsumerState<InvitationDetailView> wit
       ),
     );
   }
+}
 
-  Widget _buildCountdownCard(Duration timeLeft) {
+class CountdownCardWidget extends StatelessWidget {
+  final Duration timeLeft;
+
+  const CountdownCardWidget({
+    super.key,
+    required this.timeLeft,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final days = timeLeft.inDays;
     final hours = timeLeft.inHours % 24;
     final minutes = timeLeft.inMinutes % 60;
@@ -229,7 +243,7 @@ class _InvitationDetailViewState extends ConsumerState<InvitationDetailView> wit
 
     return AppCard(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-      borderColor: AppColors.navyAccent.withOpacity(0.2),
+      borderColor: const Color(0x331E293B), // 20% opacity AppColors.navyAccent
       child: Column(
         children: [
           const AppText(
@@ -243,21 +257,33 @@ class _InvitationDetailViewState extends ConsumerState<InvitationDetailView> wit
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildTimeItem(days.toString().padLeft(2, '0'), 'DAYS'),
-              _buildDivider(),
-              _buildTimeItem(hours.toString().padLeft(2, '0'), 'HOURS'),
-              _buildDivider(),
-              _buildTimeItem(minutes.toString().padLeft(2, '0'), 'MINS'),
-              _buildDivider(),
-              _buildTimeItem(seconds.toString().padLeft(2, '0'), 'SECS'),
+              TimeCountdownItem(value: days.toString().padLeft(2, '0'), label: 'DAYS'),
+              const TimeCountdownDivider(),
+              TimeCountdownItem(value: hours.toString().padLeft(2, '0'), label: 'HOURS'),
+              const TimeCountdownDivider(),
+              TimeCountdownItem(value: minutes.toString().padLeft(2, '0'), label: 'MINS'),
+              const TimeCountdownDivider(),
+              TimeCountdownItem(value: seconds.toString().padLeft(2, '0'), label: 'SECS'),
             ],
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildTimeItem(String value, String label) {
+class TimeCountdownItem extends StatelessWidget {
+  final String value;
+  final String label;
+
+  const TimeCountdownItem({
+    super.key,
+    required this.value,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: [
         AppText(
@@ -272,21 +298,26 @@ class _InvitationDetailViewState extends ConsumerState<InvitationDetailView> wit
         AppText(
           label,
           fontSize: 9,
-          color: AppColors.navyAccent.withOpacity(0.7),
+          color: const Color(0xB21E293B), // 70% opacity AppColors.navyAccent
           letterSpacing: 1.0,
           fontWeight: FontWeight.w600,
         ),
       ],
     );
   }
+}
 
-  Widget _buildDivider() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+class TimeCountdownDivider extends StatelessWidget {
+  const TimeCountdownDivider({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.only(bottom: 12),
       child: AppText(
         ':',
         fontSize: 20,
-        color: AppColors.navyAccent.withOpacity(0.5),
+        color: Color(0x801E293B), // 50% opacity AppColors.navyAccent
         fontWeight: FontWeight.w300,
         isSerif: true,
       ),

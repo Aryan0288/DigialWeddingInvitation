@@ -30,8 +30,8 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activeBgColor = backgroundColor ?? AppColors.navyAccent;
-    final activeFgColor = foregroundColor ?? (type == AppButtonType.primary ? Colors.black87 : AppColors.navyAccent);
+    final activeBgColor = backgroundColor ?? AppColors.accent;
+    final activeFgColor = foregroundColor ?? (type == AppButtonType.primary ? Colors.white : AppColors.accent);
 
     Widget labelWidget = isLoading
         ? SizedBox(
@@ -43,10 +43,11 @@ class AppButton extends StatelessWidget {
             ),
           )
         : AppText(
-            label,
+            label.toUpperCase(),
             color: activeFgColor,
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
+            letterSpacing: 1.2,
           );
 
     Widget childWidget = icon != null && !isLoading
@@ -69,9 +70,9 @@ class AppButton extends StatelessWidget {
             backgroundColor: activeBgColor,
             foregroundColor: activeFgColor,
             disabledBackgroundColor: activeBgColor.withOpacity(0.3),
-            shape: RoundedRectangleBorder(borderRadius: AppDesign.borderSmall),
-            elevation: 2,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
           onPressed: isLoading ? null : onPressed,
           child: childWidget,
@@ -81,9 +82,9 @@ class AppButton extends StatelessWidget {
         button = OutlinedButton(
           style: OutlinedButton.styleFrom(
             foregroundColor: activeFgColor,
-            side: BorderSide(color: activeBgColor.withOpacity(0.5), width: 1),
-            shape: RoundedRectangleBorder(borderRadius: AppDesign.borderSmall),
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            side: BorderSide(color: activeBgColor, width: 1.2),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
           onPressed: isLoading ? null : onPressed,
           child: childWidget,
@@ -93,7 +94,7 @@ class AppButton extends StatelessWidget {
         button = TextButton(
           style: TextButton.styleFrom(
             foregroundColor: activeFgColor,
-            shape: RoundedRectangleBorder(borderRadius: AppDesign.borderSmall),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             padding: const EdgeInsets.symmetric(horizontal: 16),
           ),
           onPressed: isLoading ? null : onPressed,
@@ -101,6 +102,7 @@ class AppButton extends StatelessWidget {
         );
         break;
     }
+
 
     if (width != null) {
       return SizedBox(

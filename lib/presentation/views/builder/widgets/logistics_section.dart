@@ -91,8 +91,9 @@ class LogisticsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(builderViewModelProvider);
-    final dateDisplay = DateFormat('MMMM d, y').format(state.invitation.weddingDate);
+    final weddingDate = ref.watch(builderViewModelProvider.select((s) => s.invitation.weddingDate));
+    final weddingTime = ref.watch(builderViewModelProvider.select((s) => s.invitation.weddingTime));
+    final dateDisplay = DateFormat('MMMM d, y').format(weddingDate);
     final isLight = Theme.of(context).brightness == Brightness.light;
 
     return Form(
@@ -117,12 +118,12 @@ class LogisticsSection extends ConsumerWidget {
                     AppLabel("WEDDING DATE"),
                     const SizedBox(height: 8),
                     InkWell(
-                      onTap: () => _selectDate(context, ref, state.invitation.weddingDate),
+                      onTap: () => _selectDate(context, ref, weddingDate),
                       borderRadius: AppDesign.borderSmall,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                         decoration: BoxDecoration(
-                          color: isLight ? const Color(0xFFF9FAFB) : const Color(0xFF1E2638),
+                          color: isLight ? AppColors.inputFill : const Color(0xFF1E2638),
                           borderRadius: AppDesign.borderSmall,
                           border: Border.all(color: isLight ? AppColors.border : Colors.white10),
                         ),
@@ -150,12 +151,13 @@ class LogisticsSection extends ConsumerWidget {
                     AppLabel("WEDDING TIME"),
                     const SizedBox(height: 8),
                     InkWell(
-                      onTap: () => _selectTime(context, ref, state.invitation.weddingTime),
+                      onTap: () => _selectTime(context, ref, weddingTime),
                       borderRadius: AppDesign.borderSmall,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                         decoration: BoxDecoration(
-                          color: isLight ? const Color(0xFFF9FAFB) : const Color(0xFF1E2638),
+                          color: isLight ? AppColors.inputFill : const Color(0xFF1E2638),
+
                           borderRadius: AppDesign.borderSmall,
                           border: Border.all(color: isLight ? AppColors.border : Colors.white10),
                         ),
@@ -163,7 +165,7 @@ class LogisticsSection extends ConsumerWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             AppText(
-                              state.invitation.weddingTime,
+                              weddingTime,
                               color: isLight ? AppColors.primaryText : Colors.white,
                               fontSize: 14,
                             ),

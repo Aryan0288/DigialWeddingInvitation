@@ -60,7 +60,9 @@ class ReviewExportSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(builderViewModelProvider);
+    final invitationId = ref.watch(builderViewModelProvider.select((s) => s.invitation.id));
+    final isSaving = ref.watch(builderViewModelProvider.select((s) => s.isSaving));
+    final generatedUrl = ref.watch(builderViewModelProvider.select((s) => s.generatedUrl));
     final isLight = Theme.of(context).brightness == Brightness.light;
 
     return Column(
@@ -92,7 +94,7 @@ class ReviewExportSection extends ConsumerWidget {
             );
             final success = await ref.read(builderViewModelProvider.notifier).downloadPNG(screenshotController);
             if (success && context.mounted) {
-              await ref.read(activeInvitationIdsProvider.notifier).markAsActive(state.invitation.id);
+              await ref.read(activeInvitationIdsProvider.notifier).markAsActive(invitationId);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('PNG successfully saved to downloads!'), backgroundColor: Colors.green),
               );
@@ -107,16 +109,16 @@ class ReviewExportSection extends ConsumerWidget {
           title: "Generate Web Invitation Link",
           desc: "Creates a unique dynamic link that guests can visit to view the card reactively.",
           actionLabel: "Generate URL",
-          isLoading: state.isSaving,
+          isLoading: isSaving,
           isLight: isLight,
           onAction: () async {
             final String hostUrl = Uri.base.origin + Uri.base.path;
             await ref.read(builderViewModelProvider.notifier).saveAndGenerateLink(hostUrl);
-            await ref.read(activeInvitationIdsProvider.notifier).markAsActive(state.invitation.id);
+            await ref.read(activeInvitationIdsProvider.notifier).markAsActive(invitationId);
           },
         ),
 
-        if (state.generatedUrl != null) ...[
+        if (generatedUrl != null) ...[
           const SizedBox(height: 20),
           AppCard(
             padding: const EdgeInsets.all(16),
@@ -136,7 +138,7 @@ class ReviewExportSection extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: SelectableText(
-                        state.generatedUrl!,
+                        generatedUrl,
                         style: TextStyle(
                           color: isLight ? AppColors.secondaryText : Colors.white70,
                           fontSize: 12,
@@ -146,7 +148,7 @@ class ReviewExportSection extends ConsumerWidget {
                     IconButton(
                       icon: const Icon(Icons.copy, size: 16, color: AppColors.accent),
                       onPressed: () {
-                        Clipboard.setData(ClipboardData(text: state.generatedUrl!));
+                        Clipboard.setData(ClipboardData(text: generatedUrl));
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Copied shareable link to clipboard!'), duration: Duration(seconds: 1)),
                         );
