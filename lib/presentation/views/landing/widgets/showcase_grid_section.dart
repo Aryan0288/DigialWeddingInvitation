@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -10,12 +11,24 @@ import '../../../widgets/common/app_text.dart';
 import '../../../widgets/common/app_button.dart';
 import '../../../widgets/common/scroll_entrance.dart';
 
-// Helper classification function for hover cards
+// O(1) Static Map for category lookups
+const Map<int, String> _collectionCategoryMap = {
+  1: 'Royal',
+  2: 'Royal',
+  4: 'Royal',
+  5: 'Royal',
+  6: 'Royal',
+  7: 'Luxury',
+  8: 'Luxury',
+  9: 'Luxury',
+  3: 'Floral',
+  10: 'Floral',
+  11: 'Floral',
+  12: 'Floral',
+};
+
 String _getCollectionForId(int id) {
-  if ([1, 2, 4, 5, 6].contains(id)) return 'Royal';
-  if ([7, 8, 9].contains(id)) return 'Luxury';
-  if ([3, 10, 11, 12].contains(id)) return 'Floral';
-  return 'Modern';
+  return _collectionCategoryMap[id] ?? 'Modern';
 }
 
 
@@ -82,8 +95,8 @@ class ShowcaseGridSection extends ConsumerWidget {
     // Grid Column configuration:
     // Mobile (<600): 2 columns for a compact, neat appearance
     // Tablet (<1024): 3 columns
-    // Desktop (>=1024): 5 columns
-    final int gridColumns = width < 600 ? 2 : (width < 1024 ? 3 : 5);
+    // Desktop (>=1024): 4 columns (for larger, more readable cards)
+    final int gridColumns = width < 600 ? 2 : (width < 1024 ? 3 : 4);
 
     // Dynamic padding to center the grid with a max width of 1250px on desktop
     final double horizontalPadding;
@@ -151,7 +164,7 @@ class _ShowcaseHoverCardState extends State<ShowcaseHoverCard>
   late final Animation<double> _opacityAnim;
   bool _isHovered = false;
 
-  // Static shadow — never changes, never causes re-rasterization
+  // Static final & compile-time constants (Strategy B & Const Optimization)
   static final List<BoxShadow> _cardShadow = [
     BoxShadow(
       color: Colors.black.withOpacity(0.18),
@@ -159,6 +172,26 @@ class _ShowcaseHoverCardState extends State<ShowcaseHoverCard>
       offset: const Offset(0, 5),
     ),
   ];
+
+  static final TextStyle _poppinsTextStyle = GoogleFonts.poppins();
+
+  static final LinearGradient _bottomOverlayGradient = LinearGradient(
+    begin: Alignment.bottomCenter,
+    end: Alignment.topCenter,
+    colors: [
+      Colors.black.withOpacity(0.9),
+      Colors.black.withOpacity(0.65),
+      Colors.transparent,
+    ],
+  );
+
+  static final BoxDecoration _badgeDecoration = BoxDecoration(
+    color: const Color(0xA6000000), // 65% opacity Black
+    borderRadius: BorderRadius.circular(12),
+    border: Border.all(color: const Color(0x66D4AF37), width: 1), // 40% opacity Gold
+  );
+
+  late final String _preFormattedCategory;
 
   @override
   void initState() {
@@ -173,6 +206,19 @@ class _ShowcaseHoverCardState extends State<ShowcaseHoverCard>
     _opacityAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _hoverController, curve: Curves.easeOut),
     );
+
+    // Precompute string manipulations once on initialization
+    final cat = _getCollectionForId(widget.template.id);
+    _preFormattedCategory = '${cat.toUpperCase()} COLLECTION';
+  }
+
+  @override
+  void didUpdateWidget(covariant ShowcaseHoverCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.template.id != oldWidget.template.id) {
+      final cat = _getCollectionForId(widget.template.id);
+      _preFormattedCategory = '${cat.toUpperCase()} COLLECTION';
+    }
   }
 
   @override
@@ -198,7 +244,6 @@ class _ShowcaseHoverCardState extends State<ShowcaseHoverCard>
   @override
   Widget build(BuildContext context) {
     final isLight = Theme.of(context).brightness == Brightness.light;
-    final category = _getCollectionForId(widget.template.id);
 
     return MouseRegion(
       onEnter: (_) => _onEnter(),
@@ -216,11 +261,9 @@ class _ShowcaseHoverCardState extends State<ShowcaseHoverCard>
             borderRadius: BorderRadius.circular(16),
             boxShadow: _cardShadow,
           ),
-          // Clip.hardEdge avoids the expensive saveLayer that Clip.antiAlias requires
           clipBehavior: Clip.hardEdge,
           child: Stack(
             children: [
-              // The cached card preview — no double FittedBox, template handles its own sizing
               Positioned.fill(
                 child: RepaintBoundary(
                   child: widget.cardWidget,
@@ -256,14 +299,10 @@ class _ShowcaseHoverCardState extends State<ShowcaseHoverCard>
                 right: 12,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.65),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.accentGold.withOpacity(0.4), width: 1),
-                  ),
-                  child: Row(
+                  decoration: _badgeDecoration,
+                  child: const Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: const [
+                    children: [
                       Icon(Icons.add_a_photo, color: AppColors.accentGold, size: 10),
                       SizedBox(width: 4),
                       Text(
@@ -280,7 +319,7 @@ class _ShowcaseHoverCardState extends State<ShowcaseHoverCard>
                 ),
               ),
 
-              // Bottom gradient info overlay
+              // Bottom gradient info overlay (Adaptive to Light/Dark Mode)
               Positioned(
                 bottom: 0,
                 left: 0,
@@ -288,45 +327,39 @@ class _ShowcaseHoverCardState extends State<ShowcaseHoverCard>
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: [
-                        Colors.black.withOpacity(0.9),
-                        Colors.black.withOpacity(0.65),
-                        Colors.transparent,
-                      ],
-                    ),
+                    gradient: _bottomOverlayGradient,
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       AppText(
-                        category.toUpperCase() + ' COLLECTION',
+                        _preFormattedCategory,
                         color: AppColors.accentGold,
                         fontSize: 9,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.5,
                         preventTranslation: true,
+                        style: _poppinsTextStyle,
                       ),
                       const SizedBox(height: 4),
                       AppText(
                         widget.template.title,
                         color: Colors.white,
-                        fontSize: 15,
+                        fontSize: 17,
                         fontWeight: FontWeight.bold,
-                        isSerif: true,
                         preventTranslation: true,
+                        style: _poppinsTextStyle,
                       ),
-                      const SizedBox(height: 2),
-                      AppBody(
+                      const SizedBox(height: 4),
+                      AppText(
                         widget.template.description,
                         color: Colors.white70,
-                        fontSize: 10,
+                        fontSize: 11,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         preventTranslation: true,
+                        style: _poppinsTextStyle,
                       ),
                       // Hover-revealed CTA button — only rendered when animation is active
                       AnimatedBuilder(

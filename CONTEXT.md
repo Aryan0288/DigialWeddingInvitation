@@ -264,3 +264,77 @@ graph TD
 - Wrapped the heavy Concentric CustomPainters in the studio's live `previewCard` with a `RepaintBoundary` inside `builder_view.dart` to isolate composited painting and prevent repaint loops during left-panel form scrolling.
 - Fixed the relative import paths for `builder_viewmodel.dart` across all modular sub-widgets.
 - Verified that all unit and widget tests compile and pass successfully.
+
+## New Update
+
+- Redesigned the Workspace layout theme globally to reflect a warm, premium, and elegant digital wedding design studio:
+  - Replaced SaaS blue and admin gray styles with warm ivory backgrounds (`#FAF7F2`), white card surfaces (`#FFFFFF`), warm charcoal/black text (`#2D2A26`), soft warm gray labels (`#6B645C`), warm beige borders (`#E8E2D8`), premium gold accents (`#8B6B3D`/`#755731`), and soft wedding green success checkmarks (`#4E8F5B`).
+- Overhauled workspace typography:
+  - Set Workspace UI elements to use the `Ubuntu` font family.
+  - Set Hindi text elements to automatically load the `Poppins` font family by detecting Devanagari unicode characters.
+  - Maintained elegant serif (`Playfair Display`) headers and invitation content.
+- Redesigned core workspace components:
+  - CTA Buttons: Overhauled `AppButton` into gold-pill shapes (`24.0` rounded corners) with tracked lettering.
+  - Stepper: Updated progress indicators, connecting lines, active status checks, and labels to follow the warm beige and wedding foliage green theme.
+  - Template Cards: Replaced generic tile rows with miniature 9:16 vertical mockup representations of each card, featuring inner gold borders, category tags, check circles, and soft ambient shadows.
+  - Live Preview: Customized the preview surrounding backdrop to use a solid `#FCFAF7` color, and renamed the header title to "LIVE INVITATION PREVIEW".
+- Fine-tuned the wedding design studio color scheme:
+  - Background set to `#F5F1EB`.
+  - Form Panel background set to `#FFFFFF`.
+  - Preview Panel background set to `#FCFAF7`.
+- Verified complete compilation and test suite execution passing successfully.
+
+## New Update
+
+- Cached the 15 dynamic remote templates in memory inside `DualStorageInvitationRepository` in [invitation_repository.dart](file:///d:/User/Projects/new_project_23-5-26/lib/data/repositories/invitation_repository.dart) to reduce fetch latency to 0ms.
+- Optimized GoRouter builder route transitions inside [routes.dart](file:///d:/User/Projects/new_project_23-5-26/lib/core/routes/routes.dart) by changing durations to 200ms/150ms and utilizing `Curves.easeOutCubic` to eliminate overshooting and enable snappy transitions.
+- Removed background mandalas animation loop (`RotationTransition` and `AnimationController`) inside [landing_view.dart](file:///d:/User/Projects/new_project_23-5-26/lib/presentation/views/landing/landing_view.dart) to stop continuous 60Hz idle repaints.
+- Replaced showcase grid templates rendering logic inside [landing_view.dart](file:///d:/User/Projects/new_project_23-5-26/lib/presentation/views/landing/landing_view.dart) with the lightweight CSS-style vector thumbnail previews (`getThumbnailPreview`), resolving scroll lag.
+- Increased the templates gallery columns count to 5 on desktop (2 on mobile) and reduced spacing to 12px (cross) / 16px (main) inside [landing_view.dart](file:///d:/User/Projects/new_project_23-5-26/lib/presentation/views/landing/landing_view.dart) to increase showcase density.
+- Conditionally hid the Active Invitations ledger section when empty inside [landing_view.dart](file:///d:/User/Projects/new_project_23-5-26/lib/presentation/views/landing/landing_view.dart), and compacted the card layout by reducing spacing and buttons height when active.
+- Wrapped static hero mockup stack cards with a `RepaintBoundary` inside [landing_view.dart](file:///d:/User/Projects/new_project_23-5-26/lib/presentation/views/landing/landing_view.dart) to isolate painting.
+- Checked compiling health and verified all widget tests pass successfully.
+
+## New Update
+
+- Implemented visibility animation persistence inside [scroll_entrance.dart](file:///d:/User/Projects/new_project_23-5-26/lib/presentation/widgets/common/scroll_entrance.dart) by mixing in `AutomaticKeepAliveClientMixin` and setting `wantKeepAlive` to track whether animations have been triggered. This ensures entrance animations run exactly once and persist on scroll.
+- Integrated responsive grid column calculations inside [landing_view.dart](file:///d:/User/Projects/new_project_23-5-26/lib/presentation/views/landing/landing_view.dart) (Desktop: max 4, Tablet: 3, Mobile: 1 card per row) with consistent layout spacing.
+- Restored actual visual invitation previews (`InvitationTemplateFactory.getTemplate()`) inside showcase hover cards in [landing_view.dart](file:///d:/User/Projects/new_project_23-5-26/lib/presentation/views/landing/landing_view.dart) to show complete card designs.
+- Re-verified full test suite passing successfully.
+
+## New Update
+
+- Refactored the template architecture inside [templates_widgets.dart](file:///d:/User/Projects/new_project_23-5-26/lib/presentation/widgets/templates_widgets.dart) to replace the single dynamic layout with 15 unique, fully independent custom template widgets.
+- Created custom visual vector decorators (`PalaceArchPainter`, `MughalArchPainter`, `HangingOrnamentsPainter`, `LotusPainter`, `TraditionalMandapPainter`, `InterlockingRingsPainter`, `FloralWreathPainter`, `ConstellationPainter`, and `WatercolorBackgroundPainter`) for premium visual compositions.
+- Implemented elegant couple photo frame shapes (circular, floral wreaths, asymmetrical offsets, interlocking gold squares) and a fallback illustration mode that displays stylized vector graphics if bride/groom photos are empty.
+- Mapped premium GoogleFonts typography combinations (Playfair Display, Cormorant Garamond, Poppins, Inter, Great Vibes, and Alex Brush) and established clear visual hierarchy (Family Greeting, Names, Date, Venue, RSVP footer) across all templates.
+- Checked compiling health and verified all widget tests pass successfully.
+
+
+## New Update
+
+- Reverted all changes made to templates 1, 2, and 3 inside [templates_widgets.dart](file:///d:/User/Projects/new_project_23-5-26/lib/presentation/widgets/templates_widgets.dart), restoring their original Concentric Mandala, Royal Peacock, and Rose Gold Floral designs.
+- Implemented three new premium invitation templates mapping to template IDs 4, 5, and 6:
+  - **Mughal Heritage (Vintage Arch)** (ID: 4): Pointed Mughal arch border, hanging lanterns, and bottom-right couple layout.
+  - **Lotus Mandap (Save The Date)** (ID: 5): Soft peach watercolor background, detailed palace dome mandap, and lotus arrangements.
+  - **Regal Maroon (Wavy Side Arch)** (ID: 6): Left-aligned text columns with a Bezier wavy maroon panel on the right side and gold borders.
+- Developed custom painters for decorative vector assets: `MughalArchPainter`, `MughalLanternsPainter`, `PalaceMandapPainter`, `LotusFlowerPainter`, `WavySideArchPainter`, and `TraditionalCoupleIllustrationPainter` (for traditional couple illustration mode when photos are empty).
+- Integrated Bride/Groom photo upload frames (arch-shaped, circular, or rectangular) that fall back to traditional silhouette couple illustrations when empty.
+- Updated template definitions inside [invitation_repository.dart](file:///d:/User/Projects/new_project_23-5-26/lib/data/repositories/invitation_repository.dart) for IDs 4, 5, and 6.
+- Verified compilation and test suite execution passing cleanly.
+
+## New Update
+
+- Introduced **Hybrid Image-Backed Template Architecture** — a new pattern where a static PNG image is used as a full-bleed background layer, with dynamic Flutter text widgets (`Stack` + `Positioned`) overlaid on top.
+- Added **Template 7: Dark Floral Elegance** in [templates_widgets.dart](file:///d:/User/Projects/new_project_23-5-26/lib/presentation/widgets/templates_widgets.dart):
+  - Uses `lib/assests/png/card_design_1.png` as the background (dark navy, cream roses, gold scrollwork border, wedding rings, embedded couple photo).
+  - Overlays dynamic text (शुभ विवाह header, bride/groom names, weds script, date, time, venue, personal message) in the empty dark center zone.
+  - Typography: `GoogleFonts.cormorantGaramond` (names/venue), `GoogleFonts.poppins` (labels/body), `GoogleFonts.greatVibes` ("weds" script).
+  - Color palette: white names, gold accents (#D4AF37), cream body text (#F5EDD8) on dark navy background.
+  - Graceful `errorBuilder` fallback renders a dark navy container with a gold icon if the image fails to load.
+- Registered `lib/assests/png/` asset folder in [pubspec.yaml](file:///d:/User/Projects/new_project_23-5-26/pubspec.yaml) so Flutter can bundle PNG template backgrounds.
+- Added Template 7 metadata in [invitation_repository.dart](file:///d:/User/Projects/new_project_23-5-26/lib/data/repositories/invitation_repository.dart); shifted existing remote template IDs 7–15 → 8–16 to avoid conflicts.
+- Fixed `InvitationTemplateFactory` guard from `templateId > 3` to `templateId > 7` so static widget templates (IDs 1–7) are not intercepted by the `DynamicTemplateWidget` remote-template path.
+- Verified compilation and all test suites passing successfully.
+
+

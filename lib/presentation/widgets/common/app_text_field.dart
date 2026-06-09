@@ -38,7 +38,7 @@ class AppTextField extends StatelessWidget {
     final isLight = theme.brightness == Brightness.light;
     final textColor = isLight ? AppColors.primaryText : Colors.white;
     final hintColor = isLight ? AppColors.secondaryText.withOpacity(0.6) : Colors.white24;
-    final activeGold = isLight ? const Color(0xFF2563EB) : AppColors.navyAccent;
+    final activeGold = AppColors.accent;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -46,11 +46,11 @@ class AppTextField extends StatelessWidget {
         // Label
         Text(
           label.toUpperCase(),
-          style: GoogleFonts.inter(
+          style: GoogleFonts.outfit(
             fontSize: 9,
             fontWeight: FontWeight.bold,
             letterSpacing: 2.0,
-            color: (isLight ? AppColors.secondaryText : AppColors.navyAccent).withOpacity(0.85),
+            color: (isLight ? AppColors.secondaryText : AppColors.accentGold).withOpacity(0.85),
           ),
         ),
         const SizedBox(height: 8),
@@ -64,18 +64,18 @@ class AppTextField extends StatelessWidget {
           maxLines: maxLines,
           readOnly: readOnly,
           onTap: onTap,
-          style: GoogleFonts.inter(
+          style: GoogleFonts.outfit(
             color: textColor,
             fontSize: 13,
           ),
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: GoogleFonts.inter(
+            hintStyle: GoogleFonts.outfit(
               color: hintColor,
               fontSize: 13,
             ),
             filled: true,
-            fillColor: isLight ? AppColors.inputFill : const Color(0xFF131A2A),
+            fillColor: isLight ? AppColors.inputFill : const Color(0xFF1E2638),
             prefixIcon: prefixIcon != null 
                 ? Icon(prefixIcon, color: activeGold.withOpacity(0.7), size: 18) 
                 : null,
@@ -105,5 +105,6 @@ class AppTextField extends StatelessWidget {
         ),
       ],
     );
+
   }
 }

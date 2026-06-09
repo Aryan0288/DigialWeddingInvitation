@@ -24,7 +24,8 @@ class CoupleDetailsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(builderViewModelProvider);
+    final brideImageUrl = ref.watch(builderViewModelProvider.select((s) => s.invitation.brideImageUrl));
+    final groomImageUrl = ref.watch(builderViewModelProvider.select((s) => s.invitation.groomImageUrl));
     final isLight = Theme.of(context).brightness == Brightness.light;
 
     return Form(
@@ -96,7 +97,7 @@ class CoupleDetailsSection extends ConsumerWidget {
             context,
             ref,
             label: "BRIDE'S PHOTO",
-            imageUrl: state.invitation.brideImageUrl,
+            imageUrl: brideImageUrl,
             onUpload: () async {
               final path = await platform_export.ExportService.pickImage();
               if (path != null) {
@@ -124,7 +125,7 @@ class CoupleDetailsSection extends ConsumerWidget {
             context,
             ref,
             label: "GROOM'S PHOTO",
-            imageUrl: state.invitation.groomImageUrl,
+            imageUrl: groomImageUrl,
             onUpload: () async {
               final path = await platform_export.ExportService.pickImage();
               if (path != null) {

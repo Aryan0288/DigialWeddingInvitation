@@ -49,11 +49,11 @@ class WorkspaceStepper extends ConsumerWidget {
             stepChild = const Icon(
               Icons.check,
               size: 14,
-              color: Color(0xFF065F46),
+              color: AppColors.success,
             );
           } else {
-            stepBgColor = isLight ? const Color(0xFFF3F4F6) : Colors.white.withOpacity(0.04);
-            stepBorderColor = isLight ? const Color(0xFFE5E7EB) : Colors.white12;
+            stepBgColor = isLight ? const Color(0xFFF5EFE6) : Colors.white.withOpacity(0.04);
+            stepBorderColor = isLight ? AppColors.border : Colors.white12;
             stepChild = AppText(
               '${index + 1}',
               fontSize: 11,
@@ -90,13 +90,13 @@ class WorkspaceStepper extends ConsumerWidget {
                         ),
                         const SizedBox(height: 6),
                         AppText(
-                          stepTitles[index],
+                          stepTitles[index].toUpperCase(),
                           fontSize: 9,
-                          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
                           color: isActive 
                               ? AppColors.accent 
                               : (isLight ? AppColors.secondaryText : Colors.white38),
-                          letterSpacing: 0.5,
+                          letterSpacing: 1.0,
                         ),
                       ],
                     ),

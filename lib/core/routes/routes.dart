@@ -42,16 +42,16 @@ final routerProvider = Provider<GoRouter>((ref) {
           return CustomTransitionPage(
             key: state.pageKey,
             child: InvitationBuilderView(editingId: id, startStep: step, preselectedTemplateId: templateId),
-            transitionDuration: const Duration(milliseconds: 400),
-            reverseTransitionDuration: const Duration(milliseconds: 300),
+            transitionDuration: const Duration(milliseconds: 200),
+            reverseTransitionDuration: const Duration(milliseconds: 150),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
               return FadeTransition(
                 opacity: animation,
                 child: ScaleTransition(
-                  scale: Tween<double>(begin: 0.96, end: 1.0).animate(
+                  scale: Tween<double>(begin: 0.97, end: 1.0).animate(
                     CurvedAnimation(
                       parent: animation,
-                      curve: Curves.easeOutBack,
+                      curve: Curves.easeOutCubic,
                     ),
                   ),
                   child: child,

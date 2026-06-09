@@ -23,22 +23,25 @@ class AppColors {
 
   // Common UI helper colors (SaaS Light Theme)
   static const Color cardColor = Color(0xFFFFFFFF);
-  static const Color inputFill = Color(0xFFF9FAFB);
-  static const Color border = Color(0xFFE5E7EB);
+  static const Color inputFill = Color(0xFFFFFFFF); // Clean white fields
+  static const Color border = Color(0xFFE8E2D8);
   static const Color error = Color(0xFFEF4444);
-  static const Color success = Color(0xFF10B981);
+  static const Color success = Color(0xFF4E8F5B); // Soft wedding green
 
   // Dedicated design system color tokens
-  static const Color background = Color(0xFFFFFFFF);
-  static const Color sectionBackground = Color(0xFFFAFAFA);
+  static const Color background = Color(0xFFF5F1EB);
+  static const Color sectionBackground = Color(0xFFFFFFFF);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color primaryText = Color(0xFF111827);
-  static const Color secondaryText = Color(0xFF4B5563);
-  static const Color mutedText = Color(0xFF6B7280);
-  static const Color accentGold = Color(0xFFC8A96A);
-  static const Color hoverGold = Color(0xFFB8955A);
-  static const Color accent = Color(0xFF2563EB); // Stripe blue accent
+  static const Color primaryText = Color(0xFF2D2A26);
+  static const Color secondaryText = Color(0xFF6B645C);
+  static const Color mutedText = Color(0xFF8C847A);
+  static const Color accentGold = Color(0xFFf1c232); // Premium Warm Gold
+  static const Color hoverGold = Color(0xFF755731);  // Deep gold/bronze
+  // static const Color accent = Color(0xFF8B6B3D); 
+  static const Color accent = Color(0xFFf1c232); 
+      
 }
+
 
 class AppDesign {
   // Border Radius
@@ -63,24 +66,24 @@ class AppDesign {
   // Shadows
   static List<BoxShadow> glowShadow(Color color) => [
     BoxShadow(
-      color: color.withOpacity(0.08),
-      blurRadius: 12,
-      spreadRadius: 1,
+      color: color.withOpacity(0.06),
+      blurRadius: 16,
+      spreadRadius: 2,
     )
   ];
   
   static const List<BoxShadow> cardShadow = [
     BoxShadow(
-      color: Colors.black12,
-      blurRadius: 8,
-      offset: Offset(0, 3),
+      color: Color(0x0A2D2A26),
+      blurRadius: 12,
+      offset: Offset(0, 4),
     )
   ];
 
   static const List<BoxShadow> premiumShadow = [
     BoxShadow(
-      color: Colors.black12,
-      blurRadius: 16,
+      color: Color(0x0F2D2A26),
+      blurRadius: 24,
       offset: Offset(0, 8),
     )
   ];
