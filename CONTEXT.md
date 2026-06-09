@@ -250,3 +250,17 @@ graph TD
 - Resolved compile-time blocker in [host_rsvp_dashboard.dart](file:///d:/User/Projects/new_project_23-5-26/lib/presentation/widgets/host_rsvp_dashboard.dart) where `const Padding` was wrapping a dynamic `AppText` with color evaluation based on the brightness mode (`isLight`).
 - Fixed widget test suite failure in [widget_test.dart](file:///d:/User/Projects/new_project_23-5-26/test/widget_test.dart) by importing `package:flutter/material.dart` and refactoring the hero section title finder to look for a `RichText` widget with text spans matching the new premium styled layout.
 - Executed `flutter test` and verified that the codebase compiles and all tests pass successfully.
+
+## New Update
+
+- Deconstructed the massive `builder_view.dart` into modular sub-widgets inside `lib/presentation/views/builder/widgets/`:
+  - `WorkspaceHeader`: Clean SaaS-style navigation AppBar.
+  - `WorkspaceStepper`: Modern Stripe-blue wizard progress path with success checkmarks.
+  - `TemplateSelectorSection`: Step 1 template listing with horizontal collection filter chips (All, Royal, Luxury, Floral, Modern).
+  - `CoupleDetailsSection`: Step 2 couple name and photo uploads form.
+  - `LogisticsSection`: Step 3 date, time, and venue logistics form with theme-aware dialog pickers.
+  - `ReviewExportSection`: Step 4 high-res PNG export and URL generation action cards.
+- Restyled date/time pickers inside the Logistics form to dynamically inherit light/dark SaaS and Stripe-blue accents.
+- Wrapped the heavy Concentric CustomPainters in the studio's live `previewCard` with a `RepaintBoundary` inside `builder_view.dart` to isolate composited painting and prevent repaint loops during left-panel form scrolling.
+- Fixed the relative import paths for `builder_viewmodel.dart` across all modular sub-widgets.
+- Verified that all unit and widget tests compile and pass successfully.
