@@ -24,186 +24,310 @@ class CoupleDetailsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final brideImageUrl = ref.watch(builderViewModelProvider.select((s) => s.invitation.brideImageUrl));
-    final groomImageUrl = ref.watch(builderViewModelProvider.select((s) => s.invitation.groomImageUrl));
-    final isLight = Theme.of(context).brightness == Brightness.light;
+    final brideImageUrl = ref.watch(
+        builderViewModelProvider.select((s) => s.invitation.brideImageUrl));
+    final groomImageUrl = ref.watch(
+        builderViewModelProvider.select((s) => s.invitation.groomImageUrl));
 
     return Form(
       key: formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppTitle(
-            "Step 2: Couple Details",
-            fontSize: 22,
-            fontWeight: FontWeight.w400,
-            color: isLight ? AppColors.primaryText : Colors.white,
+          // Section header
+          _StepSectionHeader(
+            stepNum: '02',
+            title: 'Couple Details',
+            subtitle: 'Names & photos render live on your invitation card',
+          ),
+          const SizedBox(height: 20),
+
+          // Bride card
+          _ProfileCard(
+            label: "Bride's Details",
+            icon: Icons.woman_outlined,
+            iconColor: const Color(0xFFE91E8C),
+            imageUrl: brideImageUrl,
+            nameController: brideController,
+            nameLabel: "BRIDE'S NAME",
+            nameHint: "e.g. Priya Sharma",
+            nameValidator: (v) =>
+                (v == null || v.trim().isEmpty) ? 'Bride name is required' : null,
+            onNameChanged: (val) =>
+                ref.read(builderViewModelProvider.notifier).updateBrideName(val),
+            onUpload: () async {
+              final path = await platform_export.ExportService.pickImage();
+              if (path != null) {
+                ref
+                    .read(builderViewModelProvider.notifier)
+                    .updateBrideImageUrl(path);
+              }
+            },
+            onDeletePhoto: () => ref
+                .read(builderViewModelProvider.notifier)
+                .updateBrideImageUrl(''),
           ),
           const SizedBox(height: 16),
-          // Custom Photo Upload Discovery Banner
+
+          // Groom card
+          _ProfileCard(
+            label: "Groom's Details",
+            icon: Icons.man_outlined,
+            iconColor: const Color(0xFF1565C0),
+            imageUrl: groomImageUrl,
+            nameController: groomController,
+            nameLabel: "GROOM'S NAME",
+            nameHint: "e.g. Aryan Mehta",
+            nameValidator: (v) =>
+                (v == null || v.trim().isEmpty) ? 'Groom name is required' : null,
+            onNameChanged: (val) =>
+                ref.read(builderViewModelProvider.notifier).updateGroomName(val),
+            onUpload: () async {
+              final path = await platform_export.ExportService.pickImage();
+              if (path != null) {
+                ref
+                    .read(builderViewModelProvider.notifier)
+                    .updateGroomImageUrl(path);
+              }
+            },
+            onDeletePhoto: () => ref
+                .read(builderViewModelProvider.notifier)
+                .updateGroomImageUrl(''),
+          ),
+          const SizedBox(height: 16),
+
+          // Personal message card
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isLight 
-                  ? AppColors.accent.withOpacity(0.06) 
-                  : AppColors.accent.withOpacity(0.04),
-              borderRadius: AppDesign.borderMedium,
-              border: Border.all(
-                color: AppColors.accent.withOpacity(0.2), 
-                width: 1.0,
-              ),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.photo_library_outlined, color: AppColors.accent, size: 20),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const AppText(
-                        '📸 Supports Custom Photos',
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.accent,
-                        preventTranslation: true,
-                      ),
-                      const SizedBox(height: 2),
-                      AppBody(
-                        'Upload photos of the bride and groom to render them inside the beautiful decorative frames of your selected theme.',
-                        fontSize: 10,
-                        color: isLight ? AppColors.secondaryText : Colors.white70,
-                      ),
-                    ],
-                  ),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x08000000),
+                  blurRadius: 8,
+                  offset: Offset(0, 3),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 24),
-          
-          AppTextField(
-            controller: brideController,
-            label: "BRIDE'S NAME",
-            hintText: "Enter Bride's Name",
-            onChanged: (val) {
-              ref.read(builderViewModelProvider.notifier).updateBrideName(val);
-            },
-            validator: (value) => value == null || value.trim().isEmpty ? 'Bride name is required' : null,
-          ),
-          const SizedBox(height: 16),
-
-          _buildPhotoUploadField(
-            context,
-            ref,
-            label: "BRIDE'S PHOTO",
-            imageUrl: brideImageUrl,
-            onUpload: () async {
-              final path = await platform_export.ExportService.pickImage();
-              if (path != null) {
-                ref.read(builderViewModelProvider.notifier).updateBrideImageUrl(path);
-              }
-            },
-            onDelete: () {
-              ref.read(builderViewModelProvider.notifier).updateBrideImageUrl('');
-            },
-          ),
-          const SizedBox(height: 24),
-
-          AppTextField(
-            controller: groomController,
-            label: "GROOM'S NAME",
-            hintText: "Enter Groom's Name",
-            onChanged: (val) {
-              ref.read(builderViewModelProvider.notifier).updateGroomName(val);
-            },
-            validator: (value) => value == null || value.trim().isEmpty ? 'Groom name is required' : null,
-          ),
-          const SizedBox(height: 16),
-
-          _buildPhotoUploadField(
-            context,
-            ref,
-            label: "GROOM'S PHOTO",
-            imageUrl: groomImageUrl,
-            onUpload: () async {
-              final path = await platform_export.ExportService.pickImage();
-              if (path != null) {
-                ref.read(builderViewModelProvider.notifier).updateGroomImageUrl(path);
-              }
-            },
-            onDelete: () {
-              ref.read(builderViewModelProvider.notifier).updateGroomImageUrl('');
-            },
-          ),
-          const SizedBox(height: 24),
-
-          AppTextField(
-            controller: messageController,
-            label: "PERSONAL WELCOME MESSAGE (OPTIONAL)",
-            hintText: "e.g. Together with our families, we invite you...",
-            maxLines: 3,
-            onChanged: (val) {
-              ref.read(builderViewModelProvider.notifier).updatePersonalMessage(val);
-            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentGold.withOpacity(0.10),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.format_quote_rounded,
+                          color: AppColors.accentGold, size: 16),
+                    ),
+                    const SizedBox(width: 10),
+                    const AppText(
+                      'Personal Message',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primaryText,
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.border.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const AppBody(
+                        'Optional',
+                        fontSize: 9,
+                        color: AppColors.mutedText,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                AppTextField(
+                  controller: messageController,
+                  label: 'WELCOME MESSAGE',
+                  hintText:
+                      'e.g. Together with our families, we invite you to share our joy…',
+                  maxLines: 3,
+                  onChanged: (val) => ref
+                      .read(builderViewModelProvider.notifier)
+                      .updatePersonalMessage(val),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildPhotoUploadField(
-    BuildContext context,
-    WidgetRef ref, {
-    required String label,
-    required String imageUrl,
-    required VoidCallback onUpload,
-    required VoidCallback onDelete,
-  }) {
-    final isLight = Theme.of(context).brightness == Brightness.light;
+// ── Profile card (photo upload + name field) ────────────────────────────────
+
+class _ProfileCard extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color iconColor;
+  final String imageUrl;
+  final TextEditingController nameController;
+  final String nameLabel;
+  final String nameHint;
+  final String? Function(String?) nameValidator;
+  final void Function(String) onNameChanged;
+  final VoidCallback onUpload;
+  final VoidCallback onDeletePhoto;
+
+  const _ProfileCard({
+    required this.label,
+    required this.icon,
+    required this.iconColor,
+    required this.imageUrl,
+    required this.nameController,
+    required this.nameLabel,
+    required this.nameHint,
+    required this.nameValidator,
+    required this.onNameChanged,
+    required this.onUpload,
+    required this.onDeletePhoto,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     ImageProvider? imageProvider;
     if (imageUrl.isNotEmpty) {
       if (imageUrl.startsWith('data:image') || !imageUrl.startsWith('http')) {
         imageProvider = getCachedMemoryImage(imageUrl);
       } else {
-        imageProvider = NetworkImage(imageUrl);
+        // 64px avatar — decode at ~2x instead of the full-resolution source.
+        imageProvider =
+            ResizeImage(NetworkImage(imageUrl), width: 128, height: 128);
       }
     }
+    final hasPhoto = imageProvider != null;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AppLabel(label),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: isLight ? AppColors.inputFill : const Color(0xFF1E2638),
-            borderRadius: AppDesign.borderSmall,
-            border: Border.all(color: isLight ? AppColors.border : Colors.white10),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x08000000),
+            blurRadius: 8,
+            offset: Offset(0, 3),
           ),
-          child: Row(
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Card header
+          Row(
             children: [
-              if (imageProvider != null) ...[
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.accent, width: 1.5),
-                    image: DecorationImage(
-                      image: imageProvider,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                child: Icon(icon, color: iconColor, size: 16),
+              ),
+              const SizedBox(width: 10),
+              AppText(
+                label,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primaryText,
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // Photo upload row
+          Row(
+            children: [
+              // Avatar circle
+              GestureDetector(
+                onTap: hasPhoto ? null : onUpload,
+                child: Stack(
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: hasPhoto
+                            ? null
+                            : AppColors.background,
+                        border: Border.all(
+                          color: hasPhoto
+                              ? AppColors.accent.withOpacity(0.5)
+                              : AppColors.border,
+                          width: hasPhoto ? 2 : 1.5,
+                        ),
+                        image: imageProvider != null
+                            ? DecorationImage(
+                                image: imageProvider,
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                      ),
+                      child: hasPhoto
+                          ? null
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.add_a_photo_outlined,
+                                    color: AppColors.mutedText, size: 18),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Photo',
+                                  style: TextStyle(
+                                    color: AppColors.mutedText,
+                                    fontSize: 8,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                    if (hasPhoto)
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: GestureDetector(
+                          onTap: onDeletePhoto,
+                          child: Container(
+                            width: 20,
+                            height: 20,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.error,
+                            ),
+                            child: const Icon(Icons.close_rounded,
+                                color: Colors.white, size: 12),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 14),
+
+              // Upload status + button
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (hasPhoto) ...[
                       const AppText(
-                        'Photo Uploaded Successfully',
+                        'Photo Uploaded',
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: AppColors.success,
@@ -211,57 +335,103 @@ class CoupleDetailsSection extends ConsumerWidget {
                       ),
                       const SizedBox(height: 2),
                       AppBody(
-                        'Ready to render in templates',
+                        'Renders inside card frames',
                         fontSize: 10,
-                        color: isLight ? AppColors.secondaryText : Colors.white54,
+                        color: AppColors.secondaryText,
                       ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 20),
-                  onPressed: onDelete,
-                ),
-              ] else ...[
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isLight ? Colors.white : Colors.white.withOpacity(0.04),
-                    border: Border.all(color: isLight ? AppColors.border : Colors.white10, width: 1.5),
-                  ),
-                  child: Icon(Icons.person_outline, color: isLight ? AppColors.secondaryText : Colors.white38, size: 24),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    ] else ...[
                       AppText(
-                        'No Photo Selected',
+                        'No photo selected',
                         fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isLight ? AppColors.primaryText : Colors.white70,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.secondaryText,
                       ),
                       const SizedBox(height: 2),
                       AppBody(
-                        'Optional couple details photo',
+                        'Optional — adds personal touch',
                         fontSize: 10,
-                        color: isLight ? AppColors.mutedText : Colors.white38,
+                        color: AppColors.mutedText,
+                      ),
+                      const SizedBox(height: 8),
+                      AppButton(
+                        label: 'Upload Photo',
+                        type: AppButtonType.outlined,
+                        icon: Icons.upload_rounded,
+                        onPressed: onUpload,
+                        height: 30,
                       ),
                     ],
-                  ),
+                  ],
                 ),
-                AppButton(
-                  label: 'Upload',
-                  type: AppButtonType.outlined,
-                  onPressed: onUpload,
-                  height: 32,
-                  width: 80,
-                ),
-              ],
+              ),
             ],
+          ),
+          const SizedBox(height: 14),
+
+          // Name field
+          AppTextField(
+            controller: nameController,
+            label: nameLabel,
+            hintText: nameHint,
+            onChanged: onNameChanged,
+            validator: nameValidator,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Shared step section header (reused across form steps) ───────────────────
+
+class _StepSectionHeader extends StatelessWidget {
+  final String stepNum;
+  final String title;
+  final String subtitle;
+
+  const _StepSectionHeader({
+    required this.stepNum,
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: AppColors.accent.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            'STEP $stepNum',
+            style: const TextStyle(
+              color: AppColors.accent,
+              fontSize: 9,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.5,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        AppTitle(
+          title,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: AppColors.primaryText,
+        ),
+        const SizedBox(height: 4),
+        AppBody(subtitle, color: AppColors.secondaryText, fontSize: 11),
+        const SizedBox(height: 8),
+        Container(
+          width: 36,
+          height: 1.5,
+          decoration: BoxDecoration(
+            color: AppColors.accentGold.withOpacity(0.55),
+            borderRadius: BorderRadius.circular(1),
           ),
         ),
       ],

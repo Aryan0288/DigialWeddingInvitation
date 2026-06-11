@@ -9,17 +9,23 @@ import '../../../widgets/common/scroll_entrance.dart';
 class ShowcaseTitleAndTabs extends ConsumerWidget {
   const ShowcaseTitleAndTabs({super.key});
 
+  static const List<String> _categories = [
+    'All', 'Royal', 'Luxury', 'Floral', 'Modern'
+  ];
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isLight = Theme.of(context).brightness == Brightness.light;
-    final landingState = ref.watch(landingViewModelProvider);
+    // Only rebuild when the selected collection changes, not on every
+    // landing state change (e.g. templates loading).
+    final selectedCollection = ref.watch(
+        landingViewModelProvider.select((s) => s.selectedCollection));
 
     return Padding(
       padding: const EdgeInsets.only(top: 32.0),
       child: ScrollEntrance(
         type: ScrollEntranceType.slideUp,
         delayIndex: 1,
-        triggerOnScroll: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -46,11 +52,10 @@ class ShowcaseTitleAndTabs extends ConsumerWidget {
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
-                  children: ['All', 'Royal', 'Luxury', 'Floral', 'Modern'].map((
+                  children: _categories.map((
                     category,
                   ) {
-                    final isSelected =
-                        landingState.selectedCollection == category;
+                    final isSelected = selectedCollection == category;
                     return GestureDetector(
                       onTap: () {
                         ref

@@ -1,118 +1,109 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_theme.dart';
 
 enum ScrollEntranceType { fadeIn, slideUp, scaleIn, slideAndScale }
 
+/// One-shot premium entrance animation.
+///
+/// Style (per design spec):
+///   - Fade:      opacity 0 -> 1
+///   - Slide up:  translateY 40 -> 0
+///   - Scale in:  scale 0.96 -> 1.00
+///   - Duration:  500ms, Curves.easeOutCubic
+///   - Stagger:   delayIndex * 70ms
+///
+/// Performance: a single [AnimationController] drives all transforms. Once the
+/// animation completes the controller is disposed and [child] is rendered
+/// directly (zero ticker cost). There is no keep-alive, so off-screen cells in
+/// a lazy list are freed normally.
 class ScrollEntrance extends StatefulWidget {
   final Widget child;
   final ScrollEntranceType type;
   final int delayIndex;
   final Duration duration;
-  final bool triggerOnScroll;
 
   const ScrollEntrance({
     super.key,
     required this.child,
     this.type = ScrollEntranceType.fadeIn,
     this.delayIndex = 0,
-    this.duration = AppDesign.durationMedium,
-    this.triggerOnScroll = true,
+    this.duration = const Duration(milliseconds: 500),
   });
 
   @override
   State<ScrollEntrance> createState() => _ScrollEntranceState();
 }
 
-class _ScrollEntranceState extends State<ScrollEntrance> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
-  late AnimationController _controller;
-  late Animation<double> _opacity;
-  late Animation<Offset> _offset;
-  late Animation<double> _scale;
+class _ScrollEntranceState extends State<ScrollEntrance>
+    with SingleTickerProviderStateMixin {
+  static const double _slideDistance = 40.0;
+
+  AnimationController? _controller;
+  late Animation<double> _anim;
   Timer? _delayTimer;
-  bool _isAnimationTriggered = false;
+  bool _completed = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    );
-
-    _opacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
-
-    _offset = Tween<Offset>(
-      begin: (widget.type == ScrollEntranceType.slideUp || widget.type == ScrollEntranceType.slideAndScale) 
-          ? const Offset(0.0, 0.05) 
-          : Offset.zero,
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutQuad),
-    );
-
-    _scale = Tween<double>(
-      begin: (widget.type == ScrollEntranceType.scaleIn || widget.type == ScrollEntranceType.slideAndScale) 
-          ? 0.95 
-          : 1.0,
-      end: 1.0,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
-
-    _triggerAnimation();
+    final c = AnimationController(vsync: this, duration: widget.duration);
+    _controller = c;
+    _anim = CurvedAnimation(parent: c, curve: Curves.easeOutCubic);
+    _scheduleAnimation();
   }
 
-  @override
-  bool get wantKeepAlive => _isAnimationTriggered;
-
-  void _triggerAnimation() {
-    if (_isAnimationTriggered) return;
-    _isAnimationTriggered = true;
-    updateKeepAlive();
-
+  void _scheduleAnimation() {
     _delayTimer = Timer(
-      Duration(milliseconds: widget.delayIndex * 30),
+      Duration(milliseconds: widget.delayIndex * 70),
       () {
-        if (mounted) {
-          _controller.forward();
-        }
+        if (!mounted) return;
+        _controller?.forward().whenComplete(_onAnimationDone);
       },
     );
+  }
+
+  void _onAnimationDone() {
+    if (!mounted) return;
+    _controller?.dispose();
+    _controller = null;
+    setState(() => _completed = true);
   }
 
   @override
   void dispose() {
     _delayTimer?.cancel();
-    _controller.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
-    
-    Widget result = widget.child;
-    
-    if (widget.type == ScrollEntranceType.scaleIn || widget.type == ScrollEntranceType.slideAndScale) {
-      result = ScaleTransition(
-        scale: _scale,
-        child: result,
-      );
-    }
-    
-    if (widget.type == ScrollEntranceType.slideUp || widget.type == ScrollEntranceType.slideAndScale) {
-      result = SlideTransition(
-        position: _offset,
-        child: result,
-      );
-    }
-    
-    return FadeTransition(
-      opacity: _opacity,
-      child: result,
+    // Once the animation is done, render the child with no overhead.
+    if (_completed) return widget.child;
+
+    final bool doSlide = widget.type == ScrollEntranceType.slideUp ||
+        widget.type == ScrollEntranceType.slideAndScale;
+    final bool doScale = widget.type == ScrollEntranceType.scaleIn ||
+        widget.type == ScrollEntranceType.slideAndScale;
+
+    return AnimatedBuilder(
+      animation: _anim,
+      child: widget.child,
+      builder: (context, child) {
+        final double t = _anim.value;
+        Widget result = child!;
+
+        if (doScale) {
+          result = Transform.scale(scale: 0.96 + (0.04 * t), child: result);
+        }
+        if (doSlide) {
+          result = Transform.translate(
+            offset: Offset(0, _slideDistance * (1 - t)),
+            child: result,
+          );
+        }
+        return Opacity(opacity: t, child: result);
+      },
     );
   }
 }
