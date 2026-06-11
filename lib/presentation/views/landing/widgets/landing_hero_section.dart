@@ -46,7 +46,6 @@ class LandingHeroSection extends StatelessWidget {
       return ScrollEntrance(
         type: ScrollEntranceType.slideUp,
         delayIndex: 1,
-        triggerOnScroll: false,
         child: Column(
           children: [
             const SizedBox(height: 24),
@@ -78,7 +77,6 @@ class LandingHeroSection extends StatelessWidget {
           child: ScrollEntrance(
             type: ScrollEntranceType.slideUp,
             delayIndex: 1,
-            triggerOnScroll: false,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -107,7 +105,6 @@ class LandingHeroSection extends StatelessWidget {
           child: ScrollEntrance(
             type: ScrollEntranceType.scaleIn,
             delayIndex: 3,
-            triggerOnScroll: false,
             child: Center(
               child: _buildHeroCardStack(),
             ),
@@ -146,35 +143,41 @@ class LandingHeroSection extends StatelessWidget {
   static const double _cardWidth = 240;
   static const double _cardHeight = 426;
 
-  Widget _buildHeroCardStack() {
-    return SizedBox(
-      height: 480,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Transform(
-            transform: Matrix4.identity()
-              ..translate(-50.0, 10.0, 0.0)
-              ..rotateZ(-0.15),
-            origin: const Offset(120, 213),
-            child: _heroCard1,
-          ),
-          Transform(
-            transform: Matrix4.identity()
-              ..translate(50.0, 20.0, 0.0)
-              ..rotateZ(0.15),
-            origin: const Offset(120, 213),
-            child: _heroCard2,
-          ),
-          Transform(
-            transform: Matrix4.identity()
-              ..translate(0.0, -10.0, 0.0),
-            child: _heroCard3,
-          ),
-        ],
-      ),
-    );
-  }
+  // The transforms and cards are all fixed, so the whole stack is built once
+  // and reused — no Matrix4 allocation per build.
+  static final Matrix4 _leftCardTransform = Matrix4.identity()
+    ..translate(-50.0, 10.0, 0.0)
+    ..rotateZ(-0.15);
+  static final Matrix4 _rightCardTransform = Matrix4.identity()
+    ..translate(50.0, 20.0, 0.0)
+    ..rotateZ(0.15);
+  static final Matrix4 _centerCardTransform = Matrix4.identity()
+    ..translate(0.0, -10.0, 0.0);
+
+  static final Widget _heroCardStack = SizedBox(
+    height: 480,
+    child: Stack(
+      alignment: Alignment.center,
+      children: [
+        Transform(
+          transform: _leftCardTransform,
+          origin: const Offset(120, 213),
+          child: _heroCard1,
+        ),
+        Transform(
+          transform: _rightCardTransform,
+          origin: const Offset(120, 213),
+          child: _heroCard2,
+        ),
+        Transform(
+          transform: _centerCardTransform,
+          child: _heroCard3,
+        ),
+      ],
+    ),
+  );
+
+  Widget _buildHeroCardStack() => _heroCardStack;
 
   static Widget _buildStackCardWrapper({required double width, required double height, required Widget child}) {
     return Container(

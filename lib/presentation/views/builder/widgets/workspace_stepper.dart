@@ -1,121 +1,136 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../widgets/common/app_text.dart';
 import '../../../viewmodels/builder_viewmodel.dart';
 
 class WorkspaceStepper extends ConsumerWidget {
   final int currentStep;
 
-  const WorkspaceStepper({
-    super.key,
-    required this.currentStep,
-  });
+  const WorkspaceStepper({super.key, required this.currentStep});
+
+  static const List<String> _labels = [
+    'Theme',
+    'Couple',
+    'Event',
+    'Share',
+    'RSVP',
+  ];
+
+  static const List<IconData> _icons = [
+    Icons.palette_outlined,
+    Icons.people_alt_outlined,
+    Icons.event_note_outlined,
+    Icons.send_outlined,
+    Icons.bar_chart_rounded,
+  ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stepTitles = ['Theme', 'Couple', 'Logistics', 'Publish', 'RSVP'];
-    final isLight = Theme.of(context).brightness == Brightness.light;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final circleSize = screenWidth < 400 ? 28.0 : 34.0;
+    final iconSize = screenWidth < 400 ? 13.0 : 15.0;
+    final labelSize = screenWidth < 400 ? 8.0 : 9.0;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-      decoration: BoxDecoration(
-        color: isLight ? AppColors.sectionBackground : Colors.white.withOpacity(0.01),
-        borderRadius: AppDesign.borderMedium,
-        border: Border.all(color: isLight ? AppColors.border : Colors.white.withOpacity(0.02)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: List.generate(5, (index) {
-          final isActive = index == currentStep;
-          final isPassed = index < currentStep;
-          
-          Color stepBgColor;
-          Color stepBorderColor;
-          Widget stepChild;
+    return Row(
+      children: List.generate(5, (index) {
+        final isActive = index == currentStep;
+        final isPassed = index < currentStep;
 
-          if (isActive) {
-            stepBgColor = AppColors.accent;
-            stepBorderColor = AppColors.accent;
-            stepChild = AppText(
-              '${index + 1}',
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            );
-          } else if (isPassed) {
-            stepBgColor = AppColors.success.withOpacity(0.12);
-            stepBorderColor = AppColors.success;
-            stepChild = const Icon(
-              Icons.check,
-              size: 14,
-              color: AppColors.success,
-            );
-          } else {
-            stepBgColor = isLight ? const Color(0xFFF5EFE6) : Colors.white.withOpacity(0.04);
-            stepBorderColor = isLight ? AppColors.border : Colors.white12;
-            stepChild = AppText(
-              '${index + 1}',
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: isLight ? AppColors.secondaryText : Colors.white54,
-            );
-          }
-
-          return Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      ref.read(builderViewModelProvider.notifier).setStep(index);
-                    },
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        AnimatedContainer(
-                          duration: AppDesign.durationFast,
-                          width: 28,
-                          height: 28,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: stepBgColor,
-                            border: Border.all(
-                              color: stepBorderColor,
-                              width: 1.5,
-                            ),
-                            boxShadow: isActive ? AppDesign.glowShadow(AppColors.accent) : null,
+        return Expanded(
+          child: Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () =>
+                      ref.read(builderViewModelProvider.notifier).setStep(index),
+                  behavior: HitTestBehavior.opaque,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Circle indicator
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 260),
+                        width: circleSize,
+                        height: circleSize,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isActive
+                              ? AppColors.accent
+                              : isPassed
+                                  ? AppColors.success.withOpacity(0.10)
+                                  : const Color(0xFFF2EDE4),
+                          border: Border.all(
+                            color: isActive
+                                ? AppColors.accent
+                                : isPassed
+                                    ? AppColors.success
+                                    : AppColors.border,
+                            width: isActive ? 0 : 1.5,
                           ),
-                          child: Center(child: stepChild),
+                          boxShadow: isActive
+                              ? [
+                                  BoxShadow(
+                                    color:
+                                        AppColors.accent.withOpacity(0.32),
+                                    blurRadius: 14,
+                                    spreadRadius: 1,
+                                  ),
+                                ]
+                              : null,
                         ),
-                        const SizedBox(height: 6),
-                        AppText(
-                          stepTitles[index].toUpperCase(),
-                          fontSize: 9,
-                          fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                          color: isActive 
-                              ? AppColors.accent 
-                              : (isLight ? AppColors.secondaryText : Colors.white38),
-                          letterSpacing: 1.0,
+                        child: Center(
+                          child: isPassed
+                              ? Icon(Icons.check_rounded,
+                                  color: AppColors.success, size: iconSize + 1)
+                              : Icon(
+                                  _icons[index],
+                                  color: isActive
+                                      ? Colors.white
+                                      : AppColors.mutedText,
+                                  size: iconSize,
+                                ),
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 6),
+                      // Label
+                      AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 200),
+                        style: TextStyle(
+                          fontSize: labelSize,
+                          fontWeight: isActive
+                              ? FontWeight.bold
+                              : FontWeight.w500,
+                          color: isActive
+                              ? AppColors.accent
+                              : isPassed
+                                  ? AppColors.success
+                                  : AppColors.mutedText,
+                          letterSpacing: 0.5,
+                        ),
+                        child: Text(_labels[index].toUpperCase()),
+                      ),
+                    ],
                   ),
                 ),
-                if (index < 4)
-                  Container(
-                    width: 20,
-                    height: 1.5,
-                    color: index < currentStep 
-                        ? AppColors.success 
-                        : (isLight ? AppColors.border : Colors.white12),
-                    margin: const EdgeInsets.only(bottom: 14),
+              ),
+              // Connector line
+              if (index < 4)
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 400),
+                  width: screenWidth < 400 ? 12 : 18,
+                  height: 1.5,
+                  margin: EdgeInsets.only(bottom: circleSize / 2 + labelSize + 6),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(1),
+                    color: index < currentStep
+                        ? AppColors.success
+                        : AppColors.border.withOpacity(0.5),
                   ),
-              ],
-            ),
-          );
-        }),
-      ),
+                ),
+            ],
+          ),
+        );
+      }),
     );
   }
 }

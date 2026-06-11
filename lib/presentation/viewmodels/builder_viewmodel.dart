@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:screenshot/screenshot.dart';
@@ -237,4 +238,56 @@ final builderViewModelProvider =
     StateNotifierProvider.autoDispose<BuilderViewModel, BuilderState>((ref) {
   final repository = ref.watch(invitationRepositoryProvider);
   return BuilderViewModel(repository);
+});
+
+// ── Debounced invitation mirror for the live preview ────────────────────────
+//
+// The live preview renders a heavy 360x640 template tree. Rebuilding it on
+// every keystroke is wasteful, so this notifier mirrors the builder's
+// invitation but coalesces rapid text edits into a single emission ~300ms
+// after typing stops. Structural changes (template selection, photo
+// upload/removal) are emitted immediately so they still feel instant.
+//
+// The builder view model remains the immediate source of truth, so saving,
+// exporting and validation always use the latest values — no data loss.
+class _DebouncedInvitationNotifier extends StateNotifier<InvitationModel> {
+  _DebouncedInvitationNotifier(super.initial);
+
+  static const Duration _debounce = Duration(milliseconds: 300);
+  Timer? _timer;
+
+  void schedule(InvitationModel next) {
+    final current = state;
+    final structuralChange =
+        next.selectedTemplateId != current.selectedTemplateId ||
+            next.brideImageUrl != current.brideImageUrl ||
+            next.groomImageUrl != current.groomImageUrl;
+
+    if (structuralChange) {
+      _timer?.cancel();
+      state = next;
+      return;
+    }
+
+    _timer?.cancel();
+    _timer = Timer(_debounce, () => state = next);
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+}
+
+final debouncedInvitationProvider = StateNotifierProvider.autoDispose<
+    _DebouncedInvitationNotifier, InvitationModel>((ref) {
+  final notifier = _DebouncedInvitationNotifier(
+    ref.read(builderViewModelProvider).invitation,
+  );
+  ref.listen<InvitationModel>(
+    builderViewModelProvider.select((s) => s.invitation),
+    (_, next) => notifier.schedule(next),
+  );
+  return notifier;
 });

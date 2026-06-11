@@ -41,7 +41,6 @@ class LandingLedgerSection extends ConsumerWidget {
       child: ScrollEntrance(
         type: ScrollEntranceType.slideUp,
         delayIndex: 2,
-        triggerOnScroll: false,
         child: AppCard(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           borderColor: const Color(0x1F1E293B), // 12% opacity navyAccent/slate
@@ -62,23 +61,18 @@ class LandingLedgerSection extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: activeInvitations.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 8),
-                itemBuilder: (context, index) {
-                  final inv = activeInvitations[index];
-                  final isLive = publishedKeys.contains(inv.id);
-
-                  return InvitationLedgerItemCard(
-                    invitation: inv,
-                    isLive: isLive,
-                    index: index,
-                    isLight: isLight,
-                  );
-                },
-              ),
+              // Plain Column instead of a shrink-wrapped non-scrolling
+              // ListView: avoids the extra layout pass while preserving the
+              // exact same (non-scrollable) stacked layout.
+              for (int index = 0; index < activeInvitations.length; index++) ...[
+                if (index > 0) const SizedBox(height: 8),
+                InvitationLedgerItemCard(
+                  invitation: activeInvitations[index],
+                  isLive: publishedKeys.contains(activeInvitations[index].id),
+                  index: index,
+                  isLight: isLight,
+                ),
+              ],
             ],
           ),
         ),
@@ -126,7 +120,6 @@ class InvitationLedgerItemCard extends StatelessWidget {
     return ScrollEntrance(
       type: ScrollEntranceType.fadeIn,
       delayIndex: index,
-      triggerOnScroll: false,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(

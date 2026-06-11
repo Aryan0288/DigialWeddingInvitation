@@ -191,6 +191,16 @@ String getCollectionForId(int id) {
   return 'Modern';
 }
 
+// Shared soft drop shadow for photo frames (0x26 == 15% black).
+// const so it is allocated once and reused across all frames.
+const List<BoxShadow> _kPhotoFrameShadow = [
+  BoxShadow(
+    color: Color(0x26000000),
+    blurRadius: 4,
+    offset: Offset(0, 2),
+  ),
+];
+
 final Map<String, MemoryImage> _base64ImageCache = {};
 
 MemoryImage getCachedMemoryImage(String base64StringOrDataUri) {
@@ -231,10 +241,12 @@ class PhotoFrameWidget extends StatelessWidget {
       imageProvider = CachedNetworkImageProvider(url);
     }
 
-    // Downscale image inside showcase grid preview to improve memory usage & scroll performance
-    final ImageProvider finalImageProvider = isPreview
-        ? ResizeImage(imageProvider, width: 128, height: 128)
-        : imageProvider;
+    // Downscale to the on-screen frame size. Previews decode tiny (128px);
+    // full cards decode at ~2x the frame so a 64px frame never holds a
+    // multi-megapixel bitmap in memory.
+    final int decodeDim = isPreview ? 128 : (size * 2).round();
+    final ImageProvider finalImageProvider =
+        ResizeImage(imageProvider, width: decodeDim, height: decodeDim);
 
     final Widget imageContainer = Container(
       width: size,
@@ -243,13 +255,7 @@ class PhotoFrameWidget extends StatelessWidget {
         shape: isCircular ? BoxShape.circle : BoxShape.rectangle,
         borderRadius: isCircular ? null : BorderRadius.circular(8),
         border: Border.all(color: collection == 'Modern' ? Colors.transparent : borderColor, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: _kPhotoFrameShadow,
         image: DecorationImage(
           image: finalImageProvider,
           fit: BoxFit.cover,
@@ -428,13 +434,16 @@ class CoupleFrameOrIllustrationWidget extends StatelessWidget {
           ? getCachedMemoryImage(invitation.groomImageUrl)
           : NetworkImage(invitation.groomImageUrl) as ImageProvider;
 
+      // Frame renders at 50px; decode previews tiny and full cards at ~2x
+      // (100px) rather than the full-resolution source.
+      const int decodeDim = 100;
       final ImageProvider brideProvider = isPreview
           ? ResizeImage(rawBrideProvider, width: 128, height: 128)
-          : rawBrideProvider;
+          : ResizeImage(rawBrideProvider, width: decodeDim, height: decodeDim);
 
       final ImageProvider groomProvider = isPreview
           ? ResizeImage(rawGroomProvider, width: 128, height: 128)
-          : rawGroomProvider;
+          : ResizeImage(rawGroomProvider, width: decodeDim, height: decodeDim);
 
       Widget frameWidget(ImageProvider provider, String side) {
         ShapeBorder shape;
@@ -468,13 +477,7 @@ class CoupleFrameOrIllustrationWidget extends StatelessWidget {
               image: provider,
               fit: BoxFit.cover,
             ),
-            shadows: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            shadows: _kPhotoFrameShadow,
           ),
         );
       }

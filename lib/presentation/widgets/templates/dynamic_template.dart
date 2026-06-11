@@ -14,6 +14,33 @@ class DynamicTemplateWidget extends StatelessWidget {
     this.isPreview = true,
   });
 
+  // Fully static — does not depend on uiModel, so allocate once.
+  static final BoxDecoration _innerGlowDecoration = BoxDecoration(
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black.withValues(alpha: 0.15),
+        blurRadius: 30,
+        spreadRadius: -20,
+        offset: const Offset(0, 0),
+      ),
+    ],
+  );
+
+  static const TextStyle _shubhVivahStyle = TextStyle(
+    fontFamily: 'Serif',
+    fontSize: 22,
+    fontWeight: FontWeight.bold,
+    color: Color(0xFFD4AF37),
+    letterSpacing: 2.0,
+  );
+
+  static const EdgeInsets _framePadding = EdgeInsets.all(16.0);
+  static const EdgeInsets _innerFramePadding = EdgeInsets.all(4.0);
+  static const EdgeInsets _contentPadding =
+      EdgeInsets.symmetric(horizontal: 20.0);
+  static const EdgeInsets _noFramePadding =
+      EdgeInsets.symmetric(horizontal: 36.0, vertical: 32.0);
+
   @override
   Widget build(BuildContext context) {
     return FittedBox(
@@ -37,6 +64,10 @@ class DynamicTemplateWidget extends StatelessWidget {
                     fit: BoxFit.cover,
                     color: uiModel.bgPatternBlendColor,
                     colorBlendMode: BlendMode.dstIn,
+                    // Decode at ~2x the 360x640 card size instead of the full
+                    // ~2000px source — drastically lower memory & decode cost.
+                    memCacheWidth: 720,
+                    memCacheHeight: 1280,
                     placeholder: (context, url) => const SizedBox.shrink(),
                     errorWidget: (context, url, error) => const SizedBox.shrink(),
                   ),
@@ -45,16 +76,7 @@ class DynamicTemplateWidget extends StatelessWidget {
               // Subtle overall inner glow
               Positioned.fill(
                 child: Container(
-                  decoration: BoxDecoration(
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
-                        blurRadius: 30,
-                        spreadRadius: -20,
-                        offset: const Offset(0, 0),
-                      ),
-                    ],
-                  ),
+                  decoration: _innerGlowDecoration,
                 ),
               ),
 
@@ -62,13 +84,13 @@ class DynamicTemplateWidget extends StatelessWidget {
               if (!uiModel.hideFrame)
                 Positioned.fill(
                   child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: _framePadding,
                     child: Container(
                       decoration: BoxDecoration(
                         border: Border.all(color: uiModel.secondaryColorSemiOpaque, width: 1.5),
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.all(4.0),
+                        padding: _innerFramePadding,
                         child: Container(
                           decoration: BoxDecoration(
                             border: Border.all(color: uiModel.secondaryColorLowOpacity, width: 1),
@@ -84,7 +106,7 @@ class DynamicTemplateWidget extends StatelessWidget {
                               
                               Positioned.fill(
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                                  padding: _contentPadding,
                                   child: _buildStructuralLayout(
                                     uiModel: uiModel,
                                     isPreview: isPreview,
@@ -102,7 +124,7 @@ class DynamicTemplateWidget extends StatelessWidget {
                 // Template 15 has no frame
                 Positioned.fill(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 36.0, vertical: 32.0),
+                    padding: _noFramePadding,
                     child: _buildStructuralLayout(
                       uiModel: uiModel,
                       isPreview: isPreview,
@@ -140,16 +162,7 @@ class DynamicTemplateWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const SizedBox(height: 12),
-        const Text(
-          'शुभ विवाह',
-          style: TextStyle(
-            fontFamily: 'Serif',
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFFD4AF37),
-            letterSpacing: 2.0,
-          ),
-        ),
+        const Text('शुभ विवाह', style: _shubhVivahStyle),
         const SizedBox(height: 12),
         Text('SHUBH VIVAH INVITATION', style: uiModel.bodyLabelStyle),
         

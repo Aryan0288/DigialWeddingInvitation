@@ -100,7 +100,8 @@ class PeacockFeatherPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant PeacockFeatherPainter oldDelegate) =>
+      oldDelegate.isRotated != isRotated;
 }
 
 // 3. Delicate Floral Corners
@@ -185,7 +186,8 @@ class GoldCornerPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant GoldCornerPainter oldDelegate) =>
+      oldDelegate.color != color;
 }
 
 // 5. Dotted Circle Painter for Royal
@@ -370,7 +372,8 @@ class MughalArchPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant MughalArchPainter oldDelegate) =>
+      oldDelegate.archColor != archColor || oldDelegate.outerBgColor != outerBgColor;
 }
 
 // 8. Mughal Lanterns Painter
@@ -432,7 +435,8 @@ class MughalLanternsPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant MughalLanternsPainter oldDelegate) =>
+      oldDelegate.goldColor != goldColor;
 }
 
 // 9. Palace Mandap Painter
@@ -504,7 +508,8 @@ class PalaceMandapPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant PalaceMandapPainter oldDelegate) =>
+      oldDelegate.color != color;
 }
 
 // 10. Lotus Flower Painter
@@ -590,7 +595,8 @@ class LotusFlowerPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant LotusFlowerPainter oldDelegate) =>
+      oldDelegate.lotusColor != lotusColor;
 }
 
 // 11. Wavy Side Arch Painter
@@ -666,7 +672,8 @@ class WavySideArchPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant WavySideArchPainter oldDelegate) =>
+      oldDelegate.maroonColor != maroonColor || oldDelegate.goldColor != goldColor;
 }
 
 // 12. Traditional Couple Illustration Painter
@@ -773,5 +780,6 @@ class TraditionalCoupleIllustrationPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant TraditionalCoupleIllustrationPainter oldDelegate) =>
+      oldDelegate.primaryColor != primaryColor || oldDelegate.accentColor != accentColor;
 }

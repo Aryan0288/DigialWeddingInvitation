@@ -138,8 +138,9 @@ class ShowcaseGridSection extends ConsumerWidget {
 
 // -------------------------------------------------------------
 // PREMIUM OVERLAY HOVER CARD WIDGET (Performance-optimized)
-// Uses explicit AnimationController — zero ticker cost when not hovered.
-// Transform.scale uses GPU compositor layer for smooth hover animation.
+// Uses implicit animations (AnimatedScale / AnimatedOpacity / AnimatedContainer)
+// — no per-card AnimationController, so zero ticker cost outside the 200ms
+// hover transition. Scale uses a GPU compositor layer for smooth hover.
 // -------------------------------------------------------------
 class ShowcaseHoverCard extends StatefulWidget {
   final RemoteTemplateModel template;
@@ -157,12 +158,10 @@ class ShowcaseHoverCard extends StatefulWidget {
   State<ShowcaseHoverCard> createState() => _ShowcaseHoverCardState();
 }
 
-class _ShowcaseHoverCardState extends State<ShowcaseHoverCard>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _hoverController;
-  late final Animation<double> _scaleAnim;
-  late final Animation<double> _opacityAnim;
+class _ShowcaseHoverCardState extends State<ShowcaseHoverCard> {
   bool _isHovered = false;
+
+  static const Duration _hoverDuration = Duration(milliseconds: 200);
 
   // Static final & compile-time constants (Strategy B & Const Optimization)
   static final List<BoxShadow> _cardShadow = [
@@ -172,6 +171,14 @@ class _ShowcaseHoverCardState extends State<ShowcaseHoverCard>
       offset: const Offset(0, 5),
     ),
   ];
+
+  static final BoxDecoration _cardDecoration = BoxDecoration(
+    borderRadius: BorderRadius.circular(16),
+    boxShadow: _cardShadow,
+  );
+
+  static const BorderRadius _cardRadius =
+      BorderRadius.all(Radius.circular(16));
 
   static final TextStyle _poppinsTextStyle = GoogleFonts.poppins();
 
@@ -191,76 +198,63 @@ class _ShowcaseHoverCardState extends State<ShowcaseHoverCard>
     border: Border.all(color: const Color(0x66D4AF37), width: 1), // 40% opacity Gold
   );
 
-  late final String _preFormattedCategory;
+  // Precomputed transparent border (no glow) reused every build.
+  static const Border _noBorder = Border.fromBorderSide(
+    BorderSide(color: Colors.transparent, width: 2.0),
+  );
+
+  late String _preFormattedCategory;
 
   @override
   void initState() {
     super.initState();
-    _hoverController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 200),
-    );
-    _scaleAnim = Tween<double>(begin: 1.0, end: 1.02).animate(
-      CurvedAnimation(parent: _hoverController, curve: Curves.easeOut),
-    );
-    _opacityAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _hoverController, curve: Curves.easeOut),
-    );
-
-    // Precompute string manipulations once on initialization
-    final cat = _getCollectionForId(widget.template.id);
-    _preFormattedCategory = '${cat.toUpperCase()} COLLECTION';
+    _preFormattedCategory = _formatCategory(widget.template.id);
   }
 
   @override
   void didUpdateWidget(covariant ShowcaseHoverCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.template.id != oldWidget.template.id) {
-      final cat = _getCollectionForId(widget.template.id);
-      _preFormattedCategory = '${cat.toUpperCase()} COLLECTION';
+      _preFormattedCategory = _formatCategory(widget.template.id);
     }
   }
 
-  @override
-  void dispose() {
-    _hoverController.dispose();
-    super.dispose();
-  }
+  static String _formatCategory(int id) =>
+      '${_getCollectionForId(id).toUpperCase()} COLLECTION';
 
   void _onEnter() {
-    if (!_isHovered) {
-      _isHovered = true;
-      _hoverController.forward();
-    }
+    if (!_isHovered) setState(() => _isHovered = true);
   }
 
   void _onExit() {
-    if (_isHovered) {
-      _isHovered = false;
-      _hoverController.reverse();
-    }
+    if (_isHovered) setState(() => _isHovered = false);
   }
 
   @override
   Widget build(BuildContext context) {
     final isLight = Theme.of(context).brightness == Brightness.light;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final isTablet = screenWidth < 1024;
+
+    final Border hoverBorder = _isHovered
+        ? Border.all(
+            color: isLight
+                ? AppColors.accentGold.withOpacity(0.8)
+                : AppColors.navyAccent.withOpacity(0.8),
+            width: 2.0,
+          )
+        : _noBorder;
 
     return MouseRegion(
       onEnter: (_) => _onEnter(),
       onExit: (_) => _onExit(),
-      child: AnimatedBuilder(
-        animation: _hoverController,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _scaleAnim.value,
-            child: child,
-          );
-        },
+      child: AnimatedScale(
+        scale: _isHovered ? 1.02 : 1.0,
+        duration: _hoverDuration,
+        curve: Curves.easeOut,
         child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: _cardShadow,
-          ),
+          decoration: _cardDecoration,
           clipBehavior: Clip.hardEdge,
           child: Stack(
             children: [
@@ -271,34 +265,28 @@ class _ShowcaseHoverCardState extends State<ShowcaseHoverCard>
               ),
 
               // Animated golden border overlay on hover
-              AnimatedBuilder(
-                animation: _hoverController,
-                builder: (context, _) {
-                  final borderColor = _opacityAnim.value > 0.01
-                      ? (isLight
-                          ? AppColors.accentGold.withOpacity(0.8 * _opacityAnim.value)
-                          : AppColors.navyAccent.withOpacity(0.8 * _opacityAnim.value))
-                      : Colors.transparent;
-                  return IgnorePointer(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: borderColor,
-                          width: 2.0,
-                        ),
-                      ),
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: AnimatedContainer(
+                    duration: _hoverDuration,
+                    curve: Curves.easeOut,
+                    decoration: BoxDecoration(
+                      borderRadius: _cardRadius,
+                      border: hoverBorder,
                     ),
-                  );
-                },
+                  ),
+                ),
               ),
 
               // Photo support visual badge overlay in top corner
               Positioned(
-                top: 12,
-                right: 12,
+                top: isMobile ? 6 : 12,
+                right: isMobile ? 6 : 12,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 5 : 8,
+                    vertical: isMobile ? 2 : 4,
+                  ),
                   decoration: _badgeDecoration,
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
@@ -325,7 +313,10 @@ class _ShowcaseHoverCardState extends State<ShowcaseHoverCard>
                 left: 0,
                 right: 0,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 10 : 16,
+                    vertical: isMobile ? 10 : 16,
+                  ),
                   decoration: BoxDecoration(
                     gradient: _bottomOverlayGradient,
                   ),
@@ -336,50 +327,52 @@ class _ShowcaseHoverCardState extends State<ShowcaseHoverCard>
                       AppText(
                         _preFormattedCategory,
                         color: AppColors.accentGold,
-                        fontSize: 9,
+                        fontSize: isMobile ? 7 : 9,
                         fontWeight: FontWeight.bold,
-                        letterSpacing: 1.5,
+                        letterSpacing: isMobile ? 1.0 : 1.5,
                         preventTranslation: true,
                         style: _poppinsTextStyle,
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: isMobile ? 2 : 4),
                       AppText(
                         widget.template.title,
                         color: Colors.white,
-                        fontSize: 17,
+                        fontSize: isMobile ? 12 : (isTablet ? 15 : 17),
                         fontWeight: FontWeight.bold,
-                        preventTranslation: true,
-                        style: _poppinsTextStyle,
-                      ),
-                      const SizedBox(height: 4),
-                      AppText(
-                        widget.template.description,
-                        color: Colors.white70,
-                        fontSize: 11,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         preventTranslation: true,
                         style: _poppinsTextStyle,
                       ),
-                      // Hover-revealed CTA button — only rendered when animation is active
-                      AnimatedBuilder(
-                        animation: _opacityAnim,
-                        builder: (context, child) {
-                          if (_opacityAnim.value < 0.01) return const SizedBox.shrink();
-                          return Opacity(
-                            opacity: _opacityAnim.value,
-                            child: child,
-                          );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 12.0),
-                          child: AppButton(
-                            label: 'Use This Theme',
-                            onPressed: widget.onSelect,
-                            width: double.infinity,
-                            height: 36,
-                          ),
+                      if (!isMobile) ...[
+                        const SizedBox(height: 4),
+                        AppText(
+                          widget.template.description,
+                          color: Colors.white70,
+                          fontSize: 11,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          preventTranslation: true,
+                          style: _poppinsTextStyle,
                         ),
+                      ],
+                      // Hover-revealed CTA button
+                      AnimatedSize(
+                        duration: _hoverDuration,
+                        curve: Curves.easeOut,
+                        alignment: Alignment.topCenter,
+                        child: _isHovered
+                            ? Padding(
+                                padding:
+                                    EdgeInsets.only(top: isMobile ? 6.0 : 12.0),
+                                child: AppButton(
+                                  label: isMobile ? 'Select' : 'Use This Theme',
+                                  onPressed: widget.onSelect,
+                                  width: double.infinity,
+                                  height: isMobile ? 28 : 36,
+                                ),
+                              )
+                            : const SizedBox(width: double.infinity),
                       ),
                     ],
                   ),
